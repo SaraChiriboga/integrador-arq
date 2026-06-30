@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OsintCompletadoEvent",
+  "type": "object",
+  "properties": {
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "targetId": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$"
+    },
+    "pdfUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL pública temporal en S3/Localstack para la descarga del PDF"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["SUCCESS", "FAILED"]
+    },
+    "completedAt": {
+      "type": "integer"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "description": "Nombre completo extraído del Registro Civil"
+        },
+        "birthDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Fecha de nacimiento YYYY-MM-DD"
+        },
+        "civilStatus": {
+          "type": "string"
+        },
+        "ant": {
+          "type": "object",
+          "properties": {
+            "points": { "type": "integer", "minimum": 0, "maximum": 30 },
+            "fines": { "type": "number", "minimum": 0.0 }
+          },
+          "required": ["points", "fines"]
+        },
+        "senescyt": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "university": { "type": "string" }
+            },
+            "required": ["title", "university"]
+          }
+        },
+        "sri": {
+          "type": "object",
+          "properties": {
+            "hasRuc": { "type": "boolean" },
+            "taxStatus": { "type": "string" }
+          },
+          "required": ["hasRuc", "taxStatus"]
+        },
+        "iess": {
+          "type": "object",
+          "properties": {
+            "isAffiliated": { "type": "boolean" },
+            "contributions": { "type": "integer" }
+          },
+          "required": ["isAffiliated", "contributions"]
+        }
+      },
+      "required": ["fullName", "birthDate", "civilStatus", "ant", "senescyt", "sri", "iess"]
+    }
+  },
+  "required": ["requestId", "targetId", "pdfUrl", "status", "completedAt", "data"]
+}

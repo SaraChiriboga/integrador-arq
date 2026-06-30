@@ -1,0 +1,4 @@
+aio-pika>=9.0.0
+motor>=3.1.2
+httpx>=0.24.1
+tenacity>=8.2.2

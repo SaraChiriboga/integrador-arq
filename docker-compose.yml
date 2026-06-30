@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # ========================================================
+  # PLATAFORMA TRANSVERSAL (Red de Tránsito)
+  # ========================================================
+  app4-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: app4-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP Port
+      - "15672:15672" # Web Management Console
+    networks:
+      - net-transit
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  app4-mailhog:
+    image: mailhog/mailhog:latest
+    container_name: app4-mailhog
+    ports:
+      - "1025:1025" # SMTP Port
+      - "8025:8025" # Web Mailhog Console
+    networks:
+      - net-transit
+
+  app4-localstack:
+    image: localstack/localstack:latest
+    container_name: app4-localstack
+    ports:
+      - "4566:4566" # LocalStack Gateway
+    environment:
+      - SERVICES=s3
+    networks:
+      - net-transit
+      - net-app1
+    volumes:
+      - localstack_data:/var/lib/localstack
+
+  # ========================================================
+  # APP 1 - MOTOR WORKER OSINT (Red App 1)
+  # ========================================================
+  app1-mongodb:
+    image: mongo:6.0
+    container_name: app1-mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - net-app1
+    environment:
+      MONGO_INITDB_DATABASE: osint_db
+    volumes:
+      - mongodb_data:/data/db
+
+  # ========================================================
+  # APP 2 - PORTAL CIUDADANO (Red App 2)
+  # ========================================================
+  app2-postgres:
+    image: postgres:15-alpine
+    container_name: app2-postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - net-app2
+    environment:
+      POSTGRES_USER: portal_user
+      POSTGRES_PASSWORD: portal_password
+      POSTGRES_DB: portal_db
+    volumes:
+      - app2_postgres_data:/var/lib/postgresql/data
+
+  app2-redis:
+    image: redis:7-alpine
+    container_name: app2-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - net-app2
+    volumes:
+      - redis_data:/data
+
+  # ========================================================
+  # APP 3 - COMPLIANCE ENGINE (Red App 3)
+  # ========================================================
+  app3-postgres:
+    image: postgres:15-alpine
+    container_name: app3-postgres
+    ports:
+      - "5433:5432" # Expuesto localmente en 5433 para evitar colisiones
+    networks:
+      - net-app3
+    environment:
+      POSTGRES_USER: compliance_user
+      POSTGRES_PASSWORD: compliance_password
+      POSTGRES_DB: compliance_db
+    volumes:
+      - app3_postgres_data:/var/lib/postgresql/data
+
+  app3-elasticsearch:
+    image: elasticsearch:8.8.2
+    container_name: app3-elasticsearch
+    ports:
+      - "9200:9200"
+    networks:
+      - net-app3
+      - net-transit
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Desactivado temporalmente para desarrollo local
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Límite de memoria para dev
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+# ========================================================
+# REDES AISLADAS (Seguridad Perimetral)
+# ========================================================
+networks:
+  net-transit:
+    driver: bridge
+  net-app1:
+    driver: bridge
+  net-app2:
+    driver: bridge
+  net-app3:
+    driver: bridge
+
+# ========================================================
+# VOLÚMENES PERSISTENTES
+# ========================================================
+volumes:
+  rabbitmq_data:
+  localstack_data:
+  mongodb_data:
+  redis_data:
+  app2_postgres_data:
+  app3_postgres_data:
+  elasticsearch_data:

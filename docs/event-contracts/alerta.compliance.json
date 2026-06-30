@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AlertaComplianceEvent",
+  "type": "object",
+  "properties": {
+    "alertId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único de la alerta de cumplimiento"
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "targetId": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$"
+    },
+    "fullName": {
+      "type": "string"
+    },
+    "riskLevel": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "matchReason": {
+      "type": "string",
+      "description": "Explicación del match (coincidencia con base de datos internacional)"
+    },
+    "timestamp": {
+      "type": "integer"
+    }
+  },
+  "required": ["alertId", "requestId", "targetId", "fullName", "riskLevel", "matchReason", "timestamp"]
+}

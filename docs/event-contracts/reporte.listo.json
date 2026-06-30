@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReporteListoEvent",
+  "type": "object",
+  "properties": {
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pdfUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Correo de destino para la notificación final"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["COMPLETED"]
+    }
+  },
+  "required": ["requestId", "pdfUrl", "email", "status"]
+}
