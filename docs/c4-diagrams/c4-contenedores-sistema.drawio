@@ -1,0 +1,197 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="C4 - Nivel 2 Contenedores - Plataforma OSINT Ecuador" id="c4-contenedores">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="titulo" value="C4 Nivel 2 — Diagrama de Contenedores&#10;Plataforma OSINT Ecuador (v3)" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="500" y="10" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Actores -->
+        <mxCell id="act-ciudadano" value="Ciudadano" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427b;strokeColor=#052E56;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act-analista" value="Analista / Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427b;strokeColor=#052E56;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="60" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act-ong" value="ONG / Empresa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427b;strokeColor=#052E56;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="60" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Gateway -->
+        <mxCell id="gateway" value="API Gateway&#10;[Contenedor: NGINX]&#10;TLS, Rate Limiting (20 req/min), WAF ligero, CORS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4a12f;strokeColor=#b3771f;fontColor=#ffffff;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="150" width="360" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============ App1 ============ -->
+        <mxCell id="grp-app1" value="App 1 — Worker OSINT" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="280" width="280" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="app1-worker" value="Worker OSINT&#10;[Contenedor: Python 3.11 / asyncio]&#10;Consulta APIs de gobierno, orquesta el PDF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="app1-lambda" value="Lambda PDF&#10;[Contenedor: Node.js 20 / Puppeteer]&#10;Renderiza el reporte y lo sube a S3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="410" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="app1-mongo" value="MongoDB&#10;[Contenedor: Base de Datos]&#10;osint_raw_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="500" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="app1-govmock" value="Mock APIs Gobierno&#10;[Contenedor: Python http.server]&#10;Simula Registro Civil/ANT/SENESCYT/SRI/IESS" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="590" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ============ App2 ============ -->
+        <mxCell id="grp-app2" value="App 2 — Portal Ciudadano" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="340" y="280" width="280" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="app2-frontend" value="Portal SPA&#10;[Contenedor: React + Vite]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="320" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="app2-backend" value="Portal API&#10;[Contenedor: Java 17 / Spring Boot]&#10;Idempotencia, orquestación, REST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="390" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="app2-postgres" value="PostgreSQL&#10;requests, users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="475" width="115" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="app2-redis" value="Redis&#10;Lock idempotencia" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="485" y="475" width="115" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ============ App3 ============ -->
+        <mxCell id="grp-app3" value="App 3 — Compliance Engine" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#f8cecc;strokeColor=#b85450;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="280" width="280" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="app3-frontend" value="Compliance Dashboard&#10;[Contenedor: React + Vite]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="320" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="app3-backend" value="Compliance API&#10;[Contenedor: Java 17 / Spring Boot]&#10;Fuzzy match PEPs, indexación" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="390" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="app3-postgres" value="PostgreSQL&#10;Alertas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="475" width="115" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="app3-es" value="Elasticsearch&#10;Índice de búsqueda" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="785" y="475" width="115" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ============ App4 ============ -->
+        <mxCell id="grp-app4" value="App 4 — Plataforma Transversal (net-transit)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="940" y="280" width="280" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="app4-notifications" value="Notificaciones&#10;[Contenedor: Java 17 / Spring Boot]&#10;WebSocket STOMP + Email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="320" width="240" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="app4-rabbitmq" value="RabbitMQ&#10;[Contenedor: Message Broker]&#10;Exchanges topic + DLX/DLQ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4a12f;strokeColor=#b3771f;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="400" width="240" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="app4-mailhog" value="Mailhog (dev)&#10;[Contenedor: Servidor SMTP]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="480" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="app4-localstack" value="LocalStack S3 (dev)&#10;[Contenedor: Emulador AWS S3]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="550" width="240" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Externos -->
+        <mxCell id="ext-gob" value="APIs Gobierno Ecuador [Externo]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6b6b6b;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="280" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ext-opensanctions" value="OpenSanctions API [Externo]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6b6b6b;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="280" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: actores -> gateway -->
+        <mxCell id="e1" edge="1" parent="1" source="act-ciudadano" target="gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="act-analista" target="gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="act-ong" target="gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Gateway -> backends -->
+        <mxCell id="e4" value="/api/v1/reports/**" edge="1" parent="1" source="gateway" target="app2-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="/api/v1/compliance/**" edge="1" parent="1" source="gateway" target="app3-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="/ws/**" edge="1" parent="1" source="gateway" target="app4-notifications" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Frontends -> backends (acceso directo tambien documentado, ver guia-integracion) -->
+        <mxCell id="e7" edge="1" parent="1" source="app2-frontend" target="app2-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="app3-frontend" target="app3-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App2 internos -->
+        <mxCell id="e9" edge="1" parent="1" source="app2-backend" target="app2-postgres" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="app2-backend" target="app2-redis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App3 internos -->
+        <mxCell id="e11" edge="1" parent="1" source="app3-backend" target="app3-postgres" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="app3-backend" target="app3-es" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="app3-backend" target="ext-opensanctions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App1 internos -->
+        <mxCell id="e14" edge="1" parent="1" source="app1-worker" target="app1-mongo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="app1-worker" target="app1-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" value="HTTP">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="app1-worker" target="app1-govmock" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="app1-govmock" target="ext-gob" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;fontSize=10;" value="simula en dev">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="app1-lambda" target="app4-localstack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App4 internos -->
+        <mxCell id="e19" edge="1" parent="1" source="app4-notifications" target="app4-mailhog" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- RabbitMQ - hub de eventos -->
+        <mxCell id="e20" value="solicitud.osint" edge="1" parent="1" source="app2-backend" target="app4-rabbitmq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#d6b656;" >
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" value="solicitud.osint / osint.completado" edge="1" parent="1" source="app4-rabbitmq" target="app1-worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#d6b656;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" value="osint.completado / alerta.compliance" edge="1" parent="1" source="app4-rabbitmq" target="app3-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#d6b656;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" value="reporte.listo / alerta.compliance" edge="1" parent="1" source="app4-rabbitmq" target="app4-notifications" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#d6b656;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Leyenda -->
+        <mxCell id="leg" value="Nota: net-app1/2/3 nunca se comunican entre si de forma directa;&#10;toda comunicacion inter-app pasa por RabbitMQ (net-transit).&#10;El Gateway y LocalStack/Elasticsearch son las unicas excepciones deliberadas." style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="940" y="710" width="280" height="70" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

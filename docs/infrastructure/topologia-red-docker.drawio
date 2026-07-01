@@ -1,0 +1,123 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Topologia de Redes Docker - Plataforma OSINT Ecuador" id="topologia-red">
+    <mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="titulo" value="Topología de Despliegue — Redes Docker Aisladas&#10;Plataforma OSINT Ecuador (v3)" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="420" y="10" width="460" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="host" value="Host Docker (docker-compose up -d)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=none;strokeColor=#333333;dashed=1;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="1240" height="850" as="geometry" />
+        </mxCell>
+
+        <!-- net-app1 -->
+        <mxCell id="net-app1" value="net-app1" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="110" width="260" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app1-worker" value="app1-worker&#10;(Python 3.11)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="150" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app1-lambda" value="app1-lambda-pdf&#10;(Node 20 + Puppeteer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="215" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app1-govmock" value="app1-gov-mock&#10;(Python http.server :8083)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="280" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app1-mongo" value="app1-mongodb&#10;(MongoDB 6.0 :27017)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="345" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app1-localstack" value="app4-localstack&#10;(LocalStack S3 :4566)&#10;[compartido con net-transit]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="410" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- net-app2 -->
+        <mxCell id="net-app2" value="net-app2" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="350" y="110" width="260" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app2-frontend" value="app2-frontend&#10;(nginx :5173→80)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="150" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app2-backend" value="app2-backend&#10;(Spring Boot :8080)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="215" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app2-postgres" value="app2-postgres&#10;(PostgreSQL 15 :5432)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="280" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app2-redis" value="app2-redis&#10;(Redis 7 :6379)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="345" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- net-app3 -->
+        <mxCell id="net-app3" value="net-app3" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#f8cecc;strokeColor=#b85450;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="640" y="110" width="260" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app3-frontend" value="app3-frontend&#10;(nginx :5174→80)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="150" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app3-backend" value="app3-backend&#10;(Spring Boot :8081)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="215" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app3-postgres" value="app3-postgres&#10;(PostgreSQL 15 :5433→5432)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="280" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-app3-es" value="app3-elasticsearch&#10;(:9200) [compartido con net-transit]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="345" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- net-transit -->
+        <mxCell id="net-transit" value="net-transit" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="930" y="110" width="300" height="600" as="geometry" />
+        </mxCell>
+        <mxCell id="c-gateway" value="app4-gateway&#10;(NGINX :80,:443)&#10;[tambien en net-app2 y net-app3]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4a12f;strokeColor=#b3771f;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="950" y="150" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c-rabbitmq" value="app4-rabbitmq&#10;(:5672 AMQP, :15672 UI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4a12f;strokeColor=#b3771f;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="950" y="225" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c-notifications" value="app4-notifications&#10;(Spring Boot :8082)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="950" y="295" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-mailhog" value="app4-mailhog&#10;(SMTP :1025, UI :8025)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="950" y="360" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-localstack2" value="app4-localstack&#10;(:4566) [tambien en net-app1]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="950" y="425" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-es2" value="app3-elasticsearch&#10;(:9200) [tambien en net-app3]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="950" y="490" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-elk" value="app4-logstash + app4-kibana&#10;(:12201/udp, :5601)&#10;[profile &quot;elk&quot;, apagado por defecto]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="950" y="555" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: Gateway a net-app2/net-app3 (unica excepcion) -->
+        <mxCell id="e1" value="unica excepcion de aislamiento&#10;(punto de ingreso)" edge="1" parent="1" source="c-gateway" target="c-app2-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;strokeColor=#b3771f;fontSize=9;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="c-gateway" target="c-app3-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;strokeColor=#b3771f;fontSize=9;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: RabbitMQ a cada app backend (via net-transit) -->
+        <mxCell id="e3" value="AMQP" edge="1" parent="1" source="c-rabbitmq" target="c-app1-worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#d6b656;fontSize=9;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="AMQP" edge="1" parent="1" source="c-rabbitmq" target="c-app2-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#d6b656;fontSize=9;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="AMQP" edge="1" parent="1" source="c-rabbitmq" target="c-app3-backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#d6b656;fontSize=9;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Leyenda -->
+        <mxCell id="leg" value="Regla de aislamiento: net-app1/2/3 nunca se conectan entre si de forma directa.&#10;Toda comunicacion inter-app pasa por net-transit (RabbitMQ).&#10;Excepciones deliberadas (lineas punteadas): Gateway (ingreso), LocalStack y&#10;Elasticsearch (infraestructura compartida, ya presentes en el diseño original)." style="text;html=1;align=left;verticalAlign=top;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="520" width="550" height="80" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

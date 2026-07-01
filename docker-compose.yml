@@ -1,5 +1,17 @@
 version: '3.8'
 
+# ==========================================================================
+# Driver de logging compartido: exporta stdout/stderr de cada contenedor en
+# formato JSON directo a Logstash (input gelf) via el driver nativo gelf de
+# Docker. Inofensivo si el stack ELK (profile "elk") esta apagado: UDP es
+# best-effort y el contenedor arranca igual aunque nadie escuche el puerto.
+# ==========================================================================
+x-gelf-logging: &gelf-logging
+  driver: gelf
+  options:
+    gelf-address: "udp://localhost:12201"
+    tag: "{{.Name}}"
+
 services:
   # ========================================================
   # PLATAFORMA TRANSVERSAL (Red de Tránsito)
@@ -17,6 +29,8 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      - ./app4-platform/rabbitmq-config/rabbitmq.conf:/etc/rabbitmq/conf.d/20-osint.conf:ro
+      - ./app4-platform/rabbitmq-config/definitions.json:/etc/rabbitmq/definitions.json:ro
 
   app4-mailhog:
     image: mailhog/mailhog:latest
@@ -40,6 +54,9 @@ services:
     volumes:
       - localstack_data:/var/lib/localstack
 
+  # ========================================================
+  # APP 1 - MOTOR WORKER OSINT + LAMBDA PDF (Red App 1)
+  # ========================================================
   # app1-mongodb: Opcional (Se puede omitir o comentar si se usa MongoDB Atlas en la nube)
   app1-mongodb:
     image: mongo:6.0
@@ -52,6 +69,55 @@ services:
       MONGO_INITDB_DATABASE: osint_db
     volumes:
       - mongodb_data:/data/db
+
+  app1-gov-mock:
+    build:
+      context: ./app1-worker
+      dockerfile: Dockerfile
+    container_name: app1-gov-mock
+    command: ["python", "worker/gov_mock.py"]
+    ports:
+      - "8083:8083"
+    networks:
+      - net-app1
+    logging: *gelf-logging
+
+  app1-lambda-pdf:
+    build:
+      context: ./app1-worker/lambda-pdf
+      dockerfile: Dockerfile
+    container_name: app1-lambda-pdf
+    ports:
+      - "3000:3000"
+    environment:
+      S3_ENDPOINT: http://app4-localstack:4566
+      S3_BUCKET_NAME: osint-bucket
+      PORT: 3000
+    depends_on:
+      - app4-localstack
+    networks:
+      - net-app1
+    logging: *gelf-logging
+
+  app1-worker:
+    build:
+      context: ./app1-worker
+      dockerfile: Dockerfile
+    container_name: app1-worker
+    environment:
+      MONGO_URI: mongodb://app1-mongodb:27017/osint_db
+      RABBITMQ_URI: amqp://guest:guest@app4-rabbitmq:5672/
+      GOV_API_BASE: http://app1-gov-mock:8083
+      LAMBDA_PDF_URL: http://app1-lambda-pdf:3000
+    depends_on:
+      - app1-mongodb
+      - app4-rabbitmq
+      - app1-gov-mock
+      - app1-lambda-pdf
+    networks:
+      - net-app1
+      - net-transit
+    logging: *gelf-logging
 
   # ========================================================
   # APP 2 - PORTAL CIUDADANO (Red App 2)
@@ -79,6 +145,46 @@ services:
       - net-app2
     volumes:
       - redis_data:/data
+
+  app2-backend:
+    build:
+      context: ./app2-portal
+      dockerfile: Dockerfile
+    container_name: app2-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: app2-postgres
+      DB_PORT: 5432
+      DB_NAME: portal_db
+      DB_USER: portal_user
+      DB_PASSWORD: portal_password
+      REDIS_HOST: app2-redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: app4-rabbitmq
+      RABBITMQ_PORT: 5672
+    depends_on:
+      - app2-postgres
+      - app2-redis
+      - app4-rabbitmq
+    networks:
+      - net-app2
+      - net-transit
+    mem_limit: 768m
+    logging: *gelf-logging
+
+  app2-frontend:
+    build:
+      context: ./app2-portal/frontend
+      dockerfile: Dockerfile
+    container_name: app2-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - app2-backend
+    networks:
+      - net-app2
+    logging: *gelf-logging
 
   # ========================================================
   # APP 3 - COMPLIANCE ENGINE (Red App 3)
@@ -109,11 +215,136 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false # Desactivado temporalmente para desarrollo local
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Límite de memoria para dev
+    mem_limit: 1g
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 
+  app3-backend:
+    build:
+      context: ./app3-compliance
+      dockerfile: Dockerfile
+    container_name: app3-backend
+    ports:
+      - "8081:8081"
+    environment:
+      POSTGRES_HOST: app3-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: compliance_db
+      POSTGRES_USER: compliance_user
+      POSTGRES_PASSWORD: compliance_password
+      RABBITMQ_HOST: app4-rabbitmq
+      RABBITMQ_PORT: 5672
+      ELASTICSEARCH_HOST: app3-elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      # Mock in-process (ver docs/architecture-decisions); se apunta a si mismo por consistencia.
+      OPENSANCTIONS_API_URL: http://localhost:8081/mock/match
+    depends_on:
+      - app3-postgres
+      - app3-elasticsearch
+      - app4-rabbitmq
+    networks:
+      - net-app3
+      - net-transit
+    mem_limit: 768m
+    logging: *gelf-logging
+
+  app3-frontend:
+    build:
+      context: ./app3-compliance/frontend
+      dockerfile: Dockerfile
+    container_name: app3-frontend
+    ports:
+      - "5174:80"
+    depends_on:
+      - app3-backend
+    networks:
+      - net-app3
+    logging: *gelf-logging
+
+  # ========================================================
+  # APP 4 - PLATAFORMA TRANSVERSAL: Notificaciones + Gateway (Red de Tránsito)
+  # ========================================================
+  app4-notifications:
+    build:
+      context: ./app4-platform
+      dockerfile: Dockerfile
+    container_name: app4-notifications
+    ports:
+      - "8082:8082"
+    environment:
+      RABBITMQ_HOST: app4-rabbitmq
+      RABBITMQ_PORT: 5672
+      MAIL_HOST: app4-mailhog
+      MAIL_PORT: 1025
+    depends_on:
+      - app4-rabbitmq
+      - app4-mailhog
+    networks:
+      - net-transit
+    mem_limit: 512m
+    logging: *gelf-logging
+
+  app4-gateway:
+    build:
+      context: ./app4-platform
+      dockerfile: gateway.Dockerfile
+    container_name: app4-gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app2-backend
+      - app3-backend
+      - app4-notifications
+    networks:
+      - net-transit
+      - net-app2
+      - net-app3
+    logging: *gelf-logging
+
+  # ========================================================
+  # OBSERVABILIDAD - ELK Stack (opcional, activar con --profile elk)
+  # Apagado por defecto para no sobrecargar de RAM el equipo de desarrollo.
+  # Reutiliza app3-elasticsearch (namespace de indice "logs-*" separado del
+  # de compliance) en vez de levantar un segundo clúster.
+  # ========================================================
+  app4-logstash:
+    image: docker.elastic.co/logstash/logstash:8.8.2
+    container_name: app4-logstash
+    profiles: ["elk"]
+    environment:
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+    ports:
+      - "12201:12201/udp"
+    volumes:
+      - ./app4-platform/elk-config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      - app3-elasticsearch
+    networks:
+      - net-transit
+    mem_limit: 512m
+
+  app4-kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.2
+    container_name: app4-kibana
+    profiles: ["elk"]
+    environment:
+      ELASTICSEARCH_HOSTS: http://app3-elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - app3-elasticsearch
+    networks:
+      - net-transit
+    mem_limit: 512m
+
 # ========================================================
 # REDES AISLADAS (Seguridad Perimetral)
+# Regla: las redes net-app1/2/3 nunca se comunican entre si; todo trafico
+# inter-app pasa por net-transit (RabbitMQ). Las unicas excepciones son el
+# Gateway (punto de ingreso, necesita hablar con los backends de App2/App3)
+# y LocalStack/Elasticsearch (infraestructura compartida ya presente antes
+# de este cambio).
 # ========================================================
 networks:
   net-transit:
