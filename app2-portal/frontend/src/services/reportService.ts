@@ -1,5 +1,5 @@
 import { api } from './api';
-import { CreateReportRequest, ReportResponse } from '../types/report';
+import type { CreateReportRequest, ReportResponse } from '../types/report';
 
 export const createReport = async (data: CreateReportRequest): Promise<ReportResponse> => {
   const response = await api.post<ReportResponse>('/reports', data);
