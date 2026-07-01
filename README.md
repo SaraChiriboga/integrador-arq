@@ -13,7 +13,7 @@ De acuerdo con el plan consensuado, cada desarrollador es responsable de un paqu
 | **Paquete A** | `app1-worker/` (Worker OSINT + Lambda PDF) | **Sari** (Tú) | Python 3.11, MongoDB, Node.js + Puppeteer |
 | **Paquete B** | `app2-portal/` (Portal Ciudadano SPA + Backend) | **Samu** | Java 17 (Spring Boot 3.x), React, PostgreSQL, Redis |
 | **Paquete C** | `app3-compliance/` (Dashboard Monitor Compliance) | *Persona 3* (Por asignar) | Java 17 (Spring Boot 3.x), React, PostgreSQL, Elasticsearch |
-| **Paquete D** | `app4-platform/` (Gateway, Notificaciones, ELK, Infra) | *Persona 4* (Por asignar) | NGINX, RabbitMQ, Java 17 (Spring Boot), Docker Compose, ELK Stack |
+| **Paquete D** | `app4-platform/` (Gateway, Notificaciones, ELK, Infra) | **Anthonny** | NGINX, RabbitMQ, Java 17 (Spring Boot), Docker Compose, ELK Stack |
 
 ---
 
@@ -41,16 +41,41 @@ osint-ecuador/
 │   ├── backend/                # Backend Spring Boot
 │   ├── frontend/               # Dashboard React SPA
 │   └── Dockerfile
-└── app4-platform/              # APP 4 — Infraestructura y Servicios Transversales (Persona 4)
+└── app4-platform/              # APP 4 — Infraestructura y Servicios Transversales (Anthonny)
     ├── notifications/          # Servicio de Notificaciones (Spring Boot WebSockets + Mail)
     ├── gateway-config/         # Configuración del proxy reverso (NGINX)
-    └── Dockerfile              # Dockerfile del servicio de notificaciones
+    ├── rabbitmq-config/        # Topología declarativa de RabbitMQ (exchanges, DLX/DLQ, policies)
+    ├── elk-config/             # Pipeline de Logstash
+    ├── Dockerfile              # Dockerfile del servicio de notificaciones
+    └── gateway.Dockerfile      # Dockerfile del API Gateway (NGINX + TLS autofirmado)
 ```
 
 ---
 
 ## 🚀 Cómo Empezar
 
-1. **Infraestructura Base (Primer Día)**: El **Desarrollador D (Persona 4)** inicializará el `docker-compose.yml` para levantar **RabbitMQ** y **LocalStack (S3)**. Ejecuta `docker-compose up -d` en la raíz para levantar estos servicios de soporte.
-2. **Contratos de Eventos**: Consulta la carpeta `docs/event-contracts/` para verificar la estructura exacta de los payloads JSON antes de programar los consumidores o productores en tus respectivos proyectos.
-3. **Mocks de Desarrollo**: Cada desarrollador puede implementar un script mock local en su propia carpeta para probar su componente sin esperar el desarrollo final de los demás (consulta las instrucciones detalladas de Mock en el `README.md` de tu respectiva carpeta).
+1. **Contratos de Eventos**: Consulta la carpeta `docs/event-contracts/` para verificar la estructura exacta de los payloads JSON antes de programar los consumidores o productores en tus respectivos proyectos.
+2. **Mocks de Desarrollo**: Cada desarrollador puede implementar un script mock local en su propia carpeta para probar su componente sin esperar el desarrollo final de los demás (consulta las instrucciones detalladas de Mock en el `README.md` de tu respectiva carpeta).
+3. **Levantar todo el ecosistema integrado**: desde la raíz del repositorio,
+   ```bash
+   docker-compose up -d
+   ```
+   Esto levanta los 4 paquetes completos (frontends, backends, workers, bases de datos, RabbitMQ, Gateway y Notificaciones) respetando el aislamiento de red descrito en `docs/infrastructure/topologia-red-docker.drawio`.
+   - Portal Ciudadano: http://localhost:5173
+   - Dashboard Compliance: http://localhost:5174
+   - API Gateway (TLS autofirmado): https://localhost
+   - RabbitMQ Management: http://localhost:15672 (guest/guest)
+   - Mailhog: http://localhost:8025
+4. **Observabilidad (opcional)**: el stack ELK está apagado por defecto para no sobrecargar de RAM el equipo de desarrollo. Para activarlo:
+   ```bash
+   docker-compose --profile elk up -d
+   ```
+   Kibana queda disponible en http://localhost:5601.
+
+## 📐 Documentación de Arquitectura
+
+- `docs/c4-diagrams/`: diagramas C4 de Contexto y Contenedores (nivel sistema) y de Componente (por paquete).
+- `docs/infrastructure/topologia-red-docker.drawio`: diagrama de despliegue con las 4 redes Docker aisladas.
+- `docs/architecture-decisions/`: ADRs (Registro de Decisiones de Arquitectura) del sistema.
+- `docs/quality-attributes/`: justificación de los atributos de calidad por paquete (caché, rate limiting, indexación, seguridad/redundancia).
+- `docs/event-contracts/`: contratos JSON de los eventos que fluyen por RabbitMQ.

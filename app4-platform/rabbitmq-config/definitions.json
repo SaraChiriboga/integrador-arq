@@ -1,0 +1,44 @@
+{
+  "rabbit_version": "3.12.0",
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "exchanges": [
+    { "name": "solicitud.exchange", "vhost": "/", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "osint.exchange", "vhost": "/", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "reporte.exchange", "vhost": "/", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "osint.dlx", "vhost": "/", "type": "direct", "durable": true, "auto_delete": false, "internal": false, "arguments": {} }
+  ],
+  "queues": [
+    { "name": "solicitud.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "completado.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
+  ],
+  "bindings": [
+    { "source": "osint.dlx", "vhost": "/", "destination": "solicitud.dlq", "destination_type": "queue", "routing_key": "solicitud.dlq", "arguments": {} },
+    { "source": "osint.dlx", "vhost": "/", "destination": "completado.dlq", "destination_type": "queue", "routing_key": "completado.dlq", "arguments": {} }
+  ],
+  "policies": [
+    {
+      "name": "dlx-solicitud-osint",
+      "vhost": "/",
+      "pattern": "^solicitud\\.osint\\.queue$",
+      "apply-to": "queues",
+      "priority": 10,
+      "definition": {
+        "dead-letter-exchange": "osint.dlx",
+        "dead-letter-routing-key": "solicitud.dlq"
+      }
+    },
+    {
+      "name": "dlx-osint-completado",
+      "vhost": "/",
+      "pattern": "^(osint\\.completado\\.queue|compliance\\.osint\\.completado\\.queue)$",
+      "apply-to": "queues",
+      "priority": 10,
+      "definition": {
+        "dead-letter-exchange": "osint.dlx",
+        "dead-letter-routing-key": "completado.dlq"
+      }
+    }
+  ]
+}

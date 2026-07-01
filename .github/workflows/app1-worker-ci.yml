@@ -1,0 +1,55 @@
+name: App1 - Worker OSINT & Lambda PDF CI
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'app1-worker/**'
+      - '.github/workflows/app1-worker-ci.yml'
+  pull_request:
+    paths:
+      - 'app1-worker/**'
+      - '.github/workflows/app1-worker-ci.yml'
+
+jobs:
+  worker:
+    name: Worker (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        working-directory: app1-worker
+        run: pip install -r requirements.txt
+
+      - name: Verificar sintaxis
+        working-directory: app1-worker
+        run: python -m py_compile worker/app.py worker/gov_mock.py
+
+      - name: Build imagen Docker
+        run: docker build -t app1-worker:ci ./app1-worker
+
+  lambda-pdf:
+    name: Lambda PDF (Node.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        working-directory: app1-worker/lambda-pdf
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+        run: npm install
+
+      - name: Build imagen Docker
+        run: docker build -t app1-lambda-pdf:ci ./app1-worker/lambda-pdf
