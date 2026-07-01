@@ -1,0 +1,10 @@
+# Evita que Git normalice finales de línea en archivos binarios (en Windows,
+# core.autocrlf puede corromper PDFs/imágenes/jars insertando CR espurios).
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.jar binary
+*.class binary
+*.zip binary
