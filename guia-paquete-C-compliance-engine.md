@@ -1,37 +1,30 @@
-# Guía del Paquete C: Compliance Engine & Dashboard Monitor
+# Documento Técnico: Paquete C - Motor de Cumplimiento y Panel de Monitoreo
 
-Este documento describe la arquitectura, responsabilidades y guía de ejecución del **Paquete C (APP 3)**, desarrollado como el motor de evaluación de riesgos y auditoría (Compliance) del sistema OSINT.
+## 1. Responsabilidad y Alcance
+El Paquete C constituye el subsistema de evaluación de riesgos y auditoría de cumplimiento (Compliance) dentro de la Plataforma OSINT Ecuador. Su propósito principal es procesar los datos de inteligencia obtenidos, evaluarlos contra bases de datos de listas restrictivas internacionales (como OpenSanctions) y generar alertas persistentes en tiempo real para el equipo de análisis.
 
-## 🎯 Responsabilidad (Persona 3)
+## 2. Arquitectura y Stack Tecnológico
+El componente está segmentado en dos capas principales:
 
-El **Paquete C** es el responsable de recibir los datos en crudo que han sido previamente extraídos y procesados por el equipo de OSINT, para evaluarlos contra listas restrictivas y de sanciones internacionales (OpenSanctions). Si se detecta un alto riesgo, el motor genera una alerta permanente para los analistas, que se visualiza en un Dashboard en tiempo real.
+* **Backend (Compliance Engine):**
+  * **Framework:** Java 17 nativo y Spring Boot 3.x.
+  * **Base de Datos Relacional:** PostgreSQL 15, encargada de la persistencia transaccional y estructurada de las alertas de riesgo.
+  * **Base de Datos Documental:** Elasticsearch 8, utilizada para la indexación profunda y búsquedas de texto completo sobre los reportes generados.
+  * **Mensajería Asíncrona:** RabbitMQ, empleado para la coreografía de eventos.
 
-## 🏗️ Arquitectura y Tecnologías
+* **Frontend (Dashboard Monitor):**
+  * **Framework:** React.js con Vite.
+  * **Estilización:** Tailwind CSS v4 y PostCSS.
+  * **Arquitectura UI:** Single Page Application (SPA) orientada al monitoreo en tiempo real con diseño basado en Glassmorphism.
 
-El paquete se divide en dos componentes principales:
+## 3. Contratos de Integración Basados en Eventos
+El sistema implementa una arquitectura orientada a eventos (EDA) utilizando el exchange de enrutamiento `osint.exchange`.
 
-1. **Backend (Compliance Engine):**
-   - **Framework:** Java 17 puro + Spring Boot 3.x
-   - **Base de Datos Relacional:** PostgreSQL 15 (Almacenamiento permanente de alertas estructuradas).
-   - **Base de Datos Documental:** Elasticsearch 8 (Indexación de reportes OSINT completos para búsquedas rápidas).
-   - **Mensajería:** RabbitMQ (Consumo asíncrono de eventos y emisión de notificaciones de alerta).
-
-2. **Frontend (Dashboard Monitor):**
-   - **Framework:** React.js + Vite.
-   - **Estilos:** TailwindCSS 4 + PostCSS.
-   - **Objetivo:** Single Page Application (SPA) para que los analistas revisen las alertas de riesgo (UI interactiva).
-
----
-
-## 📡 Integración por Eventos (RabbitMQ)
-
-El Paquete C sigue una arquitectura orientada a eventos. Todo fluye a través del exchange `osint.exchange`.
-
-### Eventos que CONSUME (Input)
-* **Routing Key:** `osint.completado`
-* **Cola exclusiva:** `compliance.osint.completado.queue`
-* **Descripción:** Escucha cuando la APP 1 termina un reporte. El JSON entrante debe contener toda la data extraída de las APIs gubernamentales y la URL del PDF.
-* **Payload Esperado:**
+### 3.1. Eventos Consumidos (Input)
+* **Clave de Enrutamiento (Routing Key):** `osint.completado`
+* **Cola de Mensajes:** `compliance.osint.completado.queue`
+* **Funcionalidad:** El sistema se suscribe a la finalización de los reportes OSINT emitidos por el Paquete A. El payload contiene los datos extraídos y el enlace al documento consolidado.
+* **Estructura del Payload Esperado (JSON):**
   ```json
   {
     "requestId": "UUID",
@@ -47,10 +40,10 @@ El Paquete C sigue una arquitectura orientada a eventos. Todo fluye a través de
   }
   ```
 
-### Eventos que EMITE (Output)
-* **Routing Key:** `alerta.compliance`
-* **Descripción:** Si el motor de OpenSanctions devuelve un riesgo mayor al 80% (score > 0.8), el sistema guarda la alerta y emite este evento para notificar al resto del ecosistema (por ejemplo, para que el Portal Ciudadano le notifique al usuario o para que se envíe un correo).
-* **Payload Emitido:**
+### 3.2. Eventos Emitidos (Output)
+* **Clave de Enrutamiento (Routing Key):** `alerta.compliance`
+* **Funcionalidad:** Tras la evaluación en el motor de riesgos, si la probabilidad de coincidencia (score) supera el umbral estricto del 80% (0.8), el sistema persiste el hallazgo y notifica al bus de mensajes para que los demás dominios de la arquitectura tengan visibilidad de la alerta.
+* **Estructura del Payload Emitido (JSON):**
   ```json
   {
     "alertId": "UUID",
@@ -58,54 +51,38 @@ El Paquete C sigue una arquitectura orientada a eventos. Todo fluye a través de
     "targetId": "UUID",
     "fullName": "NOMBRE COMPLETO",
     "riskLevel": "HIGH",
-    "matchReason": "Razón del match",
+    "matchReason": "Razón del match con la base de datos externa",
     "timestamp": 1715000000000
   }
   ```
 
----
+## 4. Especificación de Endpoints (API REST)
+El servicio expone los siguientes endpoints (desplegados localmente en el puerto 8081) para consumo exclusivo de la capa de presentación:
+* `GET /api/v1/compliance/alerts`: Recupera un arreglo estructurado con todas las alertas históricas, ordenadas de manera descendente según su marca de tiempo.
+* `GET /api/v1/compliance/search?q={criterio}`: Ejecuta una consulta directa sobre el clúster de Elasticsearch para recuperar reportes indexados.
 
-## 🛠️ API REST (Endpoints)
+## 5. Procedimiento de Despliegue Local
+Para ejecutar el entorno en una estación de trabajo de desarrollo, se deben seguir los siguientes lineamientos:
 
-El Backend expone los siguientes endpoints para el Dashboard de React (Expuesto en `http://localhost:8081`):
-
-* `GET /api/v1/compliance/alerts`: Retorna un arreglo JSON con todas las alertas de riesgo generadas, ordenadas descendentemente por fecha.
-* `GET /api/v1/compliance/search?q={nombre}`: Permite hacer búsquedas directamente en Elasticsearch sobre los reportes almacenados.
-
----
-
-## 🚀 Guía de Ejecución Local
-
-Para levantar todo el entorno del Paquete C de forma local, sigue estos pasos:
-
-### 1. Levantar la Infraestructura (Docker)
-Asegúrate de que los contenedores correspondientes a la APP 3 estén levantados desde la raíz del proyecto:
+### 5.1. Inicialización de Infraestructura
+Se requiere el despliegue de los contenedores de soporte mediante Docker Compose desde el directorio raíz del proyecto:
 ```bash
 docker-compose up -d app4-rabbitmq app3-postgres app3-elasticsearch
 ```
-*Nota: Postgres corre en el puerto local 5433 (compliance_user / compliance_password) y Elasticsearch en el 9200.*
+*(Nota Técnica: PostgreSQL se aprovisiona en el puerto 5433 bajo las credenciales compliance_user / compliance_password).*
 
-### 2. Levantar el Backend (Spring Boot)
-Se eliminó la dependencia de Lombok para garantizar la compatibilidad con cualquier versión moderna del JDK.
+### 5.2. Despliegue del Backend
+Desde el directorio `app3-compliance/backend`, se ejecuta el motor de Spring Boot sin dependencias de Lombok para evitar conflictos de compilación en versiones modernas del JDK:
 ```bash
-cd app3-compliance/backend
 ./mvnw clean spring-boot:run
 ```
-El servidor backend estará disponible en `http://localhost:8081`.
 
-### 3. Levantar el Frontend (React Dashboard)
+### 5.3. Despliegue del Frontend
+Desde el directorio `app3-compliance/frontend`, se compilan y levantan los recursos web:
 ```bash
-cd app3-compliance/frontend
-npm install
 npm run dev
 ```
-El panel de analistas estará disponible en `http://localhost:5173`.
 
----
-
-## 🧪 Pruebas Unitarias y de Integración (Mock)
-
-Dado que la API real de OpenSanctions requiere de llaves de pago o es restrictiva, el Backend implementa un servicio Mock (`OpenSanctionsMockService`).
-
-**¿Cómo funciona el Mock?**
-Si publicas un evento en RabbitMQ (`osint.completado`) donde el campo `fullName` contenga el apellido **"PEREZ"** o la palabra **"SANCIONADO"**, el Mock automáticamente devolverá un *Score de Riesgo del 89% (0.89)*, disparando así una alerta roja de Compliance en el sistema, la cual podrás ver inmediatamente en tu Frontend. En cualquier otro caso, lo marcará como Riesgo Bajo (score: 0.1) y no generará alerta.
+## 6. Pruebas de Integración y Entorno Mock
+Para facilitar las pruebas de desarrollo sin incurrir en costos asociados al consumo de APIs externas reales (OpenSanctions), el componente incorpora un servicio simulado denominado `OpenSanctionsMockService`.
+El comportamiento de este mock es determinista: si el evento entrante en RabbitMQ contiene la cadena "PEREZ" o "SANCIONADO" en el atributo fullName, el sistema calcula una probabilidad de riesgo del 89% (0.89), desencadenando exitosamente la generación de la alerta en PostgreSQL y su respectiva visualización en el Panel de Monitoreo. Para cualquier otra cadena, el sistema asigna un riesgo nominal y omite la alerta.
