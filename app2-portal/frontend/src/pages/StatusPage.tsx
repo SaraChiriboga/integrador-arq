@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getReportStatus } from '../services/reportService';
 import type { ReportResponse } from '../types/report';

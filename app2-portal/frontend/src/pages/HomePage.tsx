@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isValidCedula } from '../utils/cedulaValidator';
 import { createReport } from '../services/reportService';
@@ -21,7 +22,7 @@ export default function HomePage() {
 
   const isFormValid = isCedulaValid && isEmailValid;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!isFormValid || loading) return;
 
