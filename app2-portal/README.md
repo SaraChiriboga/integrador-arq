@@ -1,18 +1,22 @@
-# APP 2 — Portal Ciudadano
+# Portal Ciudadano (App 2)
 
-Este componente está asignado a **Samu (Persona 2)**.
+Este directorio contiene el desarrollo del Portal Ciudadano, separado en su frontend y backend.
 
-## 📂 Estructura
-*   `/backend`: API REST en Java 17 + Spring Boot 3.x. Se abre con IntelliJ IDEA.
-*   `/frontend`: SPA en React.js con Tailwind CSS y Vite. Se abre con VS Code.
-*   `Dockerfile`: Para empaquetar la API.
+## Documentación del Paquete
 
-## 🛠️ Tecnologías a utilizar
-*   **Java 17 / Spring Boot 3.x** (`spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-data-redis`, `spring-boot-starter-amqp`).
-*   **PostgreSQL 15** (`app2-postgres` en Docker) como persistencia relacional.
-*   **Redis 7** (`app2-redis` en Docker) como caché de bloqueo e idempotencia (TTL 10 min).
-*   **React + Vite + TypeScript + Tailwind CSS** para el frontend web.
+A continuación se listan los entregables generados para la documentación técnica:
 
-## 🚀 Estrategia de Mock en Dev
-1.  **Mock del Worker**: Para simular que el Worker terminó de procesar, puedes inyectar manualmente un evento de tipo `osint.completado` utilizando la consola web de RabbitMQ (`http://localhost:15672`). Tu backend de Spring Boot consumirá este evento, actualizará el estado de la solicitud en PostgreSQL y publicará el evento `reporte.listo`.
-2.  **Validación de Cédula**: Implementa la validación del dígito verificador en React usando JavaScript estándar en el cliente para evitar que se envíen solicitudes inválidas al backend.
+- **Esquema SQL:** [backend/docs/schema.sql](backend/docs/schema.sql)
+- **Diagrama C4 de componente:** 
+  - Archivo fuente editable en app.diagrams.net: [docs/c4-diagrams/c4-componente-app2-portal.drawio](docs/c4-diagrams/c4-componente-app2-portal.drawio)
+  - Versión en imagen: [docs/c4-diagrams/c4-componente-app2-portal.png](docs/c4-diagrams/c4-componente-app2-portal.png)
+
+## Justificación del TTL de Redis (10 minutos)
+
+El candado `lock:reporte:{cedula}` usa un TTL de 10 minutos por dos razones:
+
+1. **Tiempo real de procesamiento del Worker OSINT**: el Worker consulta secuencialmente/concurrentemente 5 APIs gubernamentales externas, con latencia esperada de 5-15 segundos por API. En el peor caso (fallos, reintentos con backoff exponencial), el proceso completo puede tomar varios minutos. 10 minutos da margen suficiente para que el flujo normal se complete sin que el lock expire prematuramente.
+
+2. **Balance con la experiencia del usuario**: un TTL más largo penalizaría innecesariamente a un ciudadano legítimo que necesita reintentar tras un fallo real del sistema. 10 minutos cubre el caso feliz completo sin generar frustración excesiva si algo falla.
+
+Es un valor configurable, ajustable si en producción se observa que el Worker requiere más o menos tiempo real de procesamiento.
