@@ -28,7 +28,7 @@ services:
       - net-transit
 
   app4-localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:3.0.0
     container_name: app4-localstack
     ports:
       - "4566:4566" # LocalStack Gateway
@@ -40,9 +40,7 @@ services:
     volumes:
       - localstack_data:/var/lib/localstack
 
-  # ========================================================
-  # APP 1 - MOTOR WORKER OSINT (Red App 1)
-  # ========================================================
+  # app1-mongodb: Opcional (Se puede omitir o comentar si se usa MongoDB Atlas en la nube)
   app1-mongodb:
     image: mongo:6.0
     container_name: app1-mongodb

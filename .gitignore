@@ -1,0 +1,56 @@
+# ========================================================
+# ARCHIVOS DE ENTORNOS VIRTUALES Y SCRIPTS DE PRUEBA
+# ========================================================
+scratch/
+.env
+.env.local
+
+# ========================================================
+# NODE / FRONTEND (React & Lambda)
+# ========================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.oxlintrc.json
+
+# ========================================================
+# JAVA / BACKEND (Spring Boot)
+# ========================================================
+target/
+*.class
+.mvn/
+*.jar
+*.war
+*.ear
+
+# ========================================================
+# PYTHON (Worker & Mocks)
+# ========================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# ========================================================
+# CONFIGURACIONES DE EDITORES / IDEs
+# ========================================================
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# ========================================================
+# SISTEMA OPERATIVO
+# ========================================================
+Thumbs.db
+db.properties
+desktop.ini

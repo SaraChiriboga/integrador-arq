@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net" agent="5.0">
+  <diagram id="diagram_app1_c4" name="App 1 Componentes">
+    <mxGraphModel dx="1022" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="shape=swimlane;collapsible=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#f8f9fa;strokeColor=#bdc3c7;fontSize=14;fontColor=#2c3e50;dashed=1;points=[]" value="&lt;b&gt;App 1: Motor Worker OSINT&lt;/b&gt; (Python Container)" vertex="1">
+          <mxGeometry height="340" width="460" x="180" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="2" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1e3a8a;" value="&amp;laquo;component&amp;raquo;&lt;br&gt;&lt;b&gt;:WorkerListener&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="160" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="2" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1e3a8a;" value="&amp;laquo;component&amp;raquo;&lt;br&gt;&lt;b&gt;:Aggregator&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="160" x="270" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="2" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1e3a8a;" value="&amp;laquo;component&amp;raquo;&lt;br&gt;&lt;b&gt;:MongoDBClient&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="160" x="30" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="2" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1e3a8a;" value="&amp;laquo;component&amp;raquo;&lt;br&gt;&lt;b&gt;:PDFClient&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="160" x="270" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="15" edge="1" parent="2" source="4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;entryX=0.75;entryY=0;fontColor=#4a5568;fontSize=10;" target="5" value="Datos Crudos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="160" />
+              <mxPoint x="150" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="17" edge="1" parent="2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;fontColor=#4a5568;fontSize=10;entryDx=0;entryDy=0;" target="6" value="Datos Consolidados">
+          <mxGeometry relative="1" x="0.1111" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="350" y="120" />
+            </Array>
+            <mxPoint x="350" y="120" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7" parent="1" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#1b5e20;" value="&amp;laquo;component&amp;raquo;&lt;br&gt;&lt;b&gt;RabbitMQ&lt;/b&gt; (Broker)" vertex="1">
+          <mxGeometry height="70" width="160" x="330" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;" value="&amp;laquo;database&amp;raquo;&lt;br&gt;&lt;b&gt;MongoDB Atlas&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="110" x="20" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="9" parent="1" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#4a148c;" value="&amp;laquo;component&amp;raquo;&lt;br&gt;&lt;b&gt;:LambdaPDFServer&lt;/b&gt;&lt;br&gt;(Puppeteer Node.js)" vertex="1">
+          <mxGeometry height="70" width="160" x="690" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;" value="&amp;laquo;database&amp;raquo;&lt;br&gt;&lt;b&gt;LocalStack S3&lt;/b&gt;&lt;br&gt;(Bucket de reportes)" vertex="1">
+          <mxGeometry height="70" width="110" x="715" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="1" style="shape=module;align=center;verticalAlign=top;spacingLeft=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" value="&amp;laquo;infrastructure&amp;raquo;&lt;br&gt;&lt;b&gt;APIs de Gobierno&lt;/b&gt;&lt;br&gt;(Registro Civil, ANT, SRI...)" vertex="1">
+          <mxGeometry height="70" width="160" x="690" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="12" edge="1" parent="1" source="7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;entryX=0.5;entryY=0;fontColor=#4a5568;fontSize=10;" target="3" value="Consume solicitud.osint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" edge="1" parent="1" source="3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontColor=#4a5568;fontSize=10;" target="4" value="Trigger">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="14" edge="1" parent="1" source="4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontColor=#4a5568;fontSize=10;" target="11" value="Extraer Datos (HTTP)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="640" y="215" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="16" edge="1" parent="1" source="5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;entryX=0.5;entryY=0;fontColor=#4a5568;fontSize=10;" target="8" value="Guardar datos (BSON)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="18" edge="1" parent="1" source="6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontColor=#4a5568;fontSize=10;" target="9" value="Generar PDF (HTTP)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="19" edge="1" parent="1" source="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontColor=#4a5568;fontSize=10;" target="10" value="Subir Archivo PDF">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="20" edge="1" parent="1" source="6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0;entryX=0.5;entryY=1;fontColor=#4a5568;fontSize=10;entryDx=0;entryDy=0;exitDx=0;exitDy=35;exitPerimeter=0;" target="7" value="Publica osint.completado">
+          <mxGeometry relative="1" x="-0.4154" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="410" y="375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
