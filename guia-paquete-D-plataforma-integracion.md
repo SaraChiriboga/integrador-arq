@@ -27,7 +27,7 @@ El componente está segmentado en cinco piezas:
 * **Servicio de Notificaciones (`app4-platform/notifications/`):**
     * **Framework:** Java 17 + Spring Boot 3.2 (`spring-boot-starter-websocket`, `spring-boot-starter-amqp`, `spring-boot-starter-mail`).
     * **WebSockets:** STOMP sobre SockJS, endpoint `/ws`, tópicos `/topic/reports/{requestId}` y `/topic/compliance/alerts`.
-    * **Email:** `JavaMailSender` contra un servidor SMTP de pruebas (Mailhog).
+    * **Email:** `JavaMailSender` contra un servidor SMTP **real** (Gmail por defecto; cualquier proveedor SMTP funciona), credenciales vía `.env` local (`MAIL_USERNAME`/`MAIL_PASSWORD`, nunca comiteadas).
     * Sigue el mismo patrón de `RabbitMQConfig` que ya usan App2 y App3, para que el código sea familiar al resto del equipo.
 
 * **Observabilidad (`app4-platform/elk-config/`):**
@@ -46,7 +46,7 @@ El servicio de Notificaciones consume dos eventos publicados por otros paquetes:
 ### 3.1. Evento `reporte.listo` (publicado por App2)
 * **Exchange / Routing Key:** `reporte.exchange` / `reporte.listo`
 * **Cola propia creada por App4:** `notificaciones.reporte.listo.queue`
-* **Acción:** envía un correo al ciudadano (vía Mailhog) con el enlace del PDF, y transmite un push por WebSocket al tópico `/topic/reports/{requestId}`.
+* **Acción:** envía un correo real al ciudadano (SMTP configurado en `.env`) con el enlace del PDF, y transmite un push por WebSocket al tópico `/topic/reports/{requestId}`.
 * **Estructura del Payload (JSON):**
   ```json
   {
@@ -97,24 +97,26 @@ docker-compose up -d
 ```
 Esto construye y levanta frontends, backends, workers, bases de datos, RabbitMQ, Gateway y Notificaciones, respetando el aislamiento de red (ver `docs/infrastructure/topologia-red-docker.drawio`).
 
-### 5.2. Levantar solo la plataforma transversal (Paquete D)
+### 5.2. Configurar el envío de correos (SMTP real)
+Copia `.env.example` a `.env` en la raíz del repo y completa `MAIL_USERNAME`/`MAIL_PASSWORD` (por defecto Gmail SMTP con una [contraseña de aplicación](https://myaccount.google.com/apppasswords), no tu contraseña normal). `.env` está en `.gitignore` — nunca subas credenciales reales. Sin esto, `docker-compose up` falla rápido con un mensaje claro.
+
+### 5.3. Levantar solo la plataforma transversal (Paquete D)
 ```bash
-docker-compose up -d app4-rabbitmq app4-mailhog app4-localstack app4-notifications app4-gateway
+docker-compose up -d app4-rabbitmq app4-localstack app4-notifications app4-gateway
 ```
 
-### 5.3. Activar observabilidad (ELK, opcional)
+### 5.4. Activar observabilidad (ELK, opcional)
 ```bash
 docker-compose --profile elk up -d
 ```
 Kibana queda disponible en `http://localhost:5601`.
 
-### 5.4. Endpoints útiles
+### 5.5. Endpoints útiles
 * API Gateway (HTTPS, certificado autofirmado): `https://localhost`
 * RabbitMQ Management UI: `http://localhost:15672` (`guest` / `guest`)
-* Mailhog: `http://localhost:8025`
 * WebSocket de Notificaciones: `wss://localhost/ws`
 
-### 5.5. Build local del servicio de Notificaciones (sin Docker)
+### 5.6. Build local del servicio de Notificaciones (sin Docker)
 ```bash
 cd app4-platform/notifications
 mvn -B verify
@@ -126,7 +128,7 @@ Requiere JDK 17 (Eclipse Temurin/Corretto recomendado — igual que App2/App3, L
 Para probar el servicio de Notificaciones sin depender de que App2/App3 estén corriendo:
 
 1. Abre la consola de RabbitMQ (`localhost:15672`) → **Queues** → `notificaciones.reporte.listo.queue` → **Publish message**, con el payload de la sección 3.1.
-2. Verifica que el correo llegue a Mailhog (`localhost:8025`).
+2. Verifica que el correo llegue a la bandeja real indicada en el campo `email` del payload.
 3. Conecta un cliente STOMP/SockJS a `/ws` y suscríbete a `/topic/reports/{requestId}` (usa el mismo `requestId` del payload) para confirmar el push en tiempo real.
 4. Repite el flujo publicando en `notificaciones.alerta.compliance.queue` (exchange `osint.exchange`, routing key `alerta.compliance`) y suscribiéndote a `/topic/compliance/alerts`.
 5. Para probar el DLQ: publica manualmente un mensaje malformado (JSON inválido) en `solicitud.osint.queue` y confirma en la consola de RabbitMQ que, tras los reintentos configurados, termina en `solicitud.dlq`.

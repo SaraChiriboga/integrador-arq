@@ -333,7 +333,7 @@ Proveer la infraestructura de red en contenedores Docker, la mensajería asíncr
     *   Contenedor `app-notifications` (Spring Boot) conectado a la red de tránsito.
     *   Usa Spring AMQP (`@RabbitListener`) para consumir de la cola `notificacion.queue`.
     *   Expone endpoints WebSocket mediante `Spring WebSockets` con protocolo STOMP (o WS nativo) para notificaciones rápidas y seguras.
-    *   Al recibir `reporte.listo`: envía un correo electrónico usando `spring-boot-starter-mail` (SMTP) apuntando a un contenedor Mailhog local con el enlace del PDF adjunto, y difunde vía WebSocket a la suscripción del ciudadano `/topic/reports/{requestId}`.
+    *   Al recibir `reporte.listo`: envía un correo electrónico real usando `spring-boot-starter-mail` (SMTP, por defecto Gmail vía credenciales en `.env` local) con el enlace del PDF adjunto, y difunde vía WebSocket a la suscripción del ciudadano `/topic/reports/{requestId}`.
     *   Al recibir `alerta.compliance`: envía una alerta push de alta prioridad vía WebSocket al canal de cumplimiento `/topic/compliance/alerts`.
 *   **Observabilidad centralizada (ELK Stack)**:
     *   Contenedores Docker para Elasticsearch (compartido o separado de App 3), Logstash y Kibana.
@@ -352,9 +352,10 @@ graph TD
         GW[API Gateway: NGINX]
         MQ[Bus de Eventos: RabbitMQ]
         NS[Servicio Notificaciones: Java/Spring Boot]
-        Mail[Mailhog: SMTP Server]
         ELK[ELK Stack: Logs]
     end
+
+    Mail[/SMTP Externo: Gmail u otro proveedor/]
 
     subgraph net-app1 [Red App 1: net-app1]
         App1[Worker OSINT: Python]
@@ -410,7 +411,7 @@ graph TD
 *   El comando `docker-compose up -d` arranca la red de tránsito, RabbitMQ, Gateway, Notificaciones y el ELK stack sin errores.
 *   Las redes Docker se crean aisladas y un test de red (ping) entre `app1-worker` y `app3-postgres` falla según el diseño perimetral.
 *   El API Gateway expone puertos SSL, aplica políticas de CORS y Rate Limiting a las solicitudes de entrada.
-*   El servicio de notificaciones reacciona a eventos en `notificacion.queue`, enviando correctamente WebSockets a clientes web y enrutando correos a Mailhog.
+*   El servicio de notificaciones reacciona a eventos en `notificacion.queue`, enviando correctamente WebSockets a clientes web y correos electrónicos reales vía SMTP.
 *   Se visualizan logs estructurados en Kibana en tiempo real de los contenedores de la plataforma.
 
 #### 7. Riesgos Específicos y Mitigación

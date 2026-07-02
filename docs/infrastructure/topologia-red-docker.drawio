@@ -80,7 +80,7 @@
         <mxCell id="c-notifications" value="app4-notifications&#10;(Spring Boot :8082)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="950" y="295" width="260" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="c-mailhog" value="app4-mailhog&#10;(SMTP :1025, UI :8025)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="c-smtp-ext" value="Proveedor SMTP externo (Gmail)&#10;fuera de Docker, via Internet&#10;desde net-transit" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#999999;strokeColor=#6b6b6b;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="950" y="360" width="260" height="50" as="geometry" />
         </mxCell>
         <mxCell id="c-localstack2" value="app4-localstack&#10;(:4566) [tambien en net-app1]" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
