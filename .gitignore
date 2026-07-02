@@ -54,3 +54,8 @@ ENV/
 Thumbs.db
 db.properties
 desktop.ini
+
+# ========================================================
+# DOCKER COMPOSE (overrides locales, no se comitean)
+# ========================================================
+docker-compose.override.yml
