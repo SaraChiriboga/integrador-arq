@@ -25,9 +25,9 @@ El componente está segmentado en cinco piezas:
     * **Dead-lettering sin tocar código ajeno:** en vez de redeclarar las colas de App1/App2/App3 (lo que rompería si sus argumentos no coinciden byte a byte), se usan **policies** de RabbitMQ que aplican `dead-letter-exchange` por patrón de nombre de cola.
 
 * **Servicio de Notificaciones (`app4-platform/notifications/`):**
-    * **Framework:** Java 17 + Spring Boot 3.2 (`spring-boot-starter-websocket`, `spring-boot-starter-amqp`, `spring-boot-starter-mail`).
+    * **Framework:** Java 17 + Spring Boot 3.2 (`spring-boot-starter-websocket`, `spring-boot-starter-amqp`).
     * **WebSockets:** STOMP sobre SockJS, endpoint `/ws`, tópicos `/topic/reports/{requestId}` y `/topic/compliance/alerts`.
-    * **Email:** `JavaMailSender` contra un servidor SMTP **real** (Gmail por defecto; cualquier proveedor SMTP funciona), credenciales vía `.env` local (`MAIL_USERNAME`/`MAIL_PASSWORD`, nunca comiteadas).
+    * **No envía correo.** El correo real lo dispara el frontend de App2 vía EmailJS (ver ADR-005) — este servicio solo reenvía el push por WebSocket, para no depender de credenciales SMTP compartidas por todo el equipo.
     * Sigue el mismo patrón de `RabbitMQConfig` que ya usan App2 y App3, para que el código sea familiar al resto del equipo.
 
 * **Observabilidad (`app4-platform/elk-config/`):**
@@ -46,7 +46,7 @@ El servicio de Notificaciones consume dos eventos publicados por otros paquetes:
 ### 3.1. Evento `reporte.listo` (publicado por App2)
 * **Exchange / Routing Key:** `reporte.exchange` / `reporte.listo`
 * **Cola propia creada por App4:** `notificaciones.reporte.listo.queue`
-* **Acción:** envía un correo real al ciudadano (SMTP configurado en `.env`) con el enlace del PDF, y transmite un push por WebSocket al tópico `/topic/reports/{requestId}`.
+* **Acción:** transmite un push por WebSocket al tópico `/topic/reports/{requestId}`. El correo real al ciudadano con el enlace del PDF lo dispara por separado el frontend de App2 (vía EmailJS) al detectar el estado `COMPLETED`, no este servicio.
 * **Estructura del Payload (JSON):**
   ```json
   {
@@ -97,8 +97,8 @@ docker-compose up -d
 ```
 Esto construye y levanta frontends, backends, workers, bases de datos, RabbitMQ, Gateway y Notificaciones, respetando el aislamiento de red (ver `docs/infrastructure/topologia-red-docker.drawio`).
 
-### 5.2. Configurar el envío de correos (SMTP real)
-Copia `.env.example` a `.env` en la raíz del repo y completa `MAIL_USERNAME`/`MAIL_PASSWORD` (por defecto Gmail SMTP con una [contraseña de aplicación](https://myaccount.google.com/apppasswords), no tu contraseña normal). `.env` está en `.gitignore` — nunca subas credenciales reales. Sin esto, `docker-compose up` falla rápido con un mensaje claro.
+### 5.2. Envío de correo real
+No requiere configuración adicional: el correo lo dispara el navegador del ciudadano vía **EmailJS** cuando el Portal detecta que el reporte quedó `COMPLETED` (ver `app2-portal/frontend/.env` y ADR-005). No hay ningún `.env` de backend que completar para esto — `docker-compose up` funciona igual para todo el equipo sin configuración de correo extra.
 
 ### 5.3. Levantar solo la plataforma transversal (Paquete D)
 ```bash
@@ -128,9 +128,9 @@ Requiere JDK 17 (Eclipse Temurin/Corretto recomendado — igual que App2/App3, L
 Para probar el servicio de Notificaciones sin depender de que App2/App3 estén corriendo:
 
 1. Abre la consola de RabbitMQ (`localhost:15672`) → **Queues** → `notificaciones.reporte.listo.queue` → **Publish message**, con el payload de la sección 3.1.
-2. Verifica que el correo llegue a la bandeja real indicada en el campo `email` del payload.
-3. Conecta un cliente STOMP/SockJS a `/ws` y suscríbete a `/topic/reports/{requestId}` (usa el mismo `requestId` del payload) para confirmar el push en tiempo real.
-4. Repite el flujo publicando en `notificaciones.alerta.compliance.queue` (exchange `osint.exchange`, routing key `alerta.compliance`) y suscribiéndote a `/topic/compliance/alerts`.
+2. Conecta un cliente STOMP/SockJS a `/ws` y suscríbete a `/topic/reports/{requestId}` (usa el mismo `requestId` del payload) para confirmar el push en tiempo real.
+3. Para probar el envío real de correo (independiente de RabbitMQ/Notificaciones), usa el flujo completo del Portal Ciudadano o llama directo a `https://api.emailjs.com/api/v1.0/email/send` con los identificadores de `app2-portal/frontend/.env`.
+4. Repite el flujo del punto 1 publicando en `notificaciones.alerta.compliance.queue` (exchange `osint.exchange`, routing key `alerta.compliance`) y suscribiéndote a `/topic/compliance/alerts`.
 5. Para probar el DLQ: publica manualmente un mensaje malformado (JSON inválido) en `solicitud.osint.queue` y confirma en la consola de RabbitMQ que, tras los reintentos configurados, termina en `solicitud.dlq`.
 
 ## 7. CI/CD
@@ -146,6 +146,7 @@ Se agregaron 4 plantillas de GitHub Actions en `.github/workflows/`, una por paq
 * `docs/c4-diagrams/c4-contexto-sistema.drawio` y `c4-contenedores-sistema.drawio` — C4 Nivel 1 y 2 del sistema completo.
 * `docs/infrastructure/topologia-red-docker.drawio` — diagrama de despliegue con las 4 redes Docker.
 * `docs/architecture-decisions/ADR-001` a `ADR-004` — decisiones de arquitectura (EDA, stack Java, base de datos por servicio, PDF serverless).
+* `docs/architecture-decisions/ADR-005` — envío de correo real desde el frontend (EmailJS) en vez de SMTP compartido en el backend.
 * `docs/quality-attributes/seguridad_redundancia.md` — justificación de WAF/TLS/JWT/redundancia, cierra el punto pendiente de `docs/quality-attributes/README.md`.
 
 ## 9. Observaciones para el Equipo (no corregidas por no ser parte de este paquete)

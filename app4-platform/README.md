@@ -4,7 +4,7 @@ Responsable: **Anthonny** (Paquete D — Integrador Técnico).
 
 ## 📂 Estructura
 
-- `notifications/`: Servicio de Notificaciones en Java 17 + Spring Boot 3.2 (WebSockets STOMP + Spring Mail + Spring AMQP), puerto `8082`.
+- `notifications/`: Servicio de Notificaciones en Java 17 + Spring Boot 3.2 (WebSockets STOMP + Spring AMQP), puerto `8082`. El envío de correo real ya **no** vive aquí — lo dispara el frontend de App2 vía EmailJS (ver ADR-005).
 - `gateway-config/nginx.conf`: configuración del API Gateway (reverse proxy, TLS, rate limiting, CORS, WAF ligero).
 - `rabbitmq-config/`: `definitions.json` + `rabbitmq.conf` — topología declarativa del bus de eventos (exchanges, DLX/DLQ, policies).
 - `elk-config/logstash.conf`: pipeline de Logstash (entrada `gelf`, salida a Elasticsearch).
@@ -13,31 +13,21 @@ Responsable: **Anthonny** (Paquete D — Integrador Técnico).
 
 ## 🛠️ Tecnologías utilizadas
 
-- **Java 17 / Spring Boot 3.2** (`spring-boot-starter-websocket`, `spring-boot-starter-mail`, `spring-boot-starter-amqp`).
+- **Java 17 / Spring Boot 3.2** (`spring-boot-starter-websocket`, `spring-boot-starter-amqp`).
 - **NGINX 1.25** con TLS autofirmado y `limit_req_zone` para Rate Limiting (20 req/min por IP).
 - **RabbitMQ** (`rabbitmq:3-management-alpine`) con las exchanges/colas/DLQ definidas en `rabbitmq-config/definitions.json`.
 - **ELK Stack** (Logstash + Kibana, reutilizando el Elasticsearch de App 3) para recolectar logs de stdout de los contenedores en formato JSON vía el driver nativo `gelf` de Docker.
-- **SMTP real** (Gmail por defecto, cualquier proveedor SMTP funciona) para el envío de correos — credenciales vía `.env` local (ver sección "Configurar el envío de correos").
 
 ## 🔌 Contratos de eventos que consume este paquete
 
 | Cola propia | Exchange / routing key | Publicado por | Acción |
 |---|---|---|---|
-| `notificaciones.reporte.listo.queue` | `reporte.exchange` / `reporte.listo` | App2 | Envía email real (SMTP) + push WebSocket a `/topic/reports/{requestId}` |
+| `notificaciones.reporte.listo.queue` | `reporte.exchange` / `reporte.listo` | App2 | Push WebSocket a `/topic/reports/{requestId}` (el correo real lo dispara el frontend, ver `app2-portal/frontend/README.md` y ADR-005) |
 | `notificaciones.alerta.compliance.queue` | `osint.exchange` / `alerta.compliance` | App3 | Push WebSocket a `/topic/compliance/alerts` |
 
-## ✉️ Configurar el envío de correos (SMTP real)
+## ✉️ Envío de correo real
 
-El servicio de Notificaciones envía correos reales, no usa un servidor de pruebas. Antes de levantar `app4-notifications` necesitas:
-
-1. Copiar `.env.example` (raíz del repo) a `.env` y completar tus credenciales:
-   ```bash
-   cp .env.example .env
-   ```
-2. Por defecto se usa **Gmail SMTP** (`smtp.gmail.com:587`). Requiere una [contraseña de aplicación](https://myaccount.google.com/apppasswords) de Google (no tu contraseña normal — Gmail la rechaza para SMTP). Otros proveedores (Outlook, SendGrid, Mailgun, etc.) funcionan igual, solo cambia `MAIL_HOST`/`MAIL_PORT` en tu `.env`.
-3. `.env` está en `.gitignore` — **nunca** comitees credenciales reales.
-
-Si `MAIL_USERNAME`/`MAIL_PASSWORD` no están definidas, `docker-compose up` falla rápido con un mensaje claro en vez de arrancar el contenedor sin poder enviar correos.
+El correo con el enlace del PDF ya **no** lo envía este servicio — lo dispara directamente el navegador del ciudadano vía **EmailJS**, apenas el *polling* del Portal Ciudadano detecta que el reporte quedó `COMPLETED`. Ver `docs/architecture-decisions/ADR-005-emailjs-frontend.md` para el porqué, y `app2-portal/frontend/.env` para la configuración (identificadores públicos, no credenciales).
 
 ## 🚀 Cómo levantarlo localmente
 
@@ -67,6 +57,6 @@ docker-compose --profile elk up -d
    ```json
    { "requestId": "test-123", "pdfUrl": "https://ejemplo.com/reporte.pdf", "email": "tu-correo-real@ejemplo.com", "status": "COMPLETED" }
    ```
-2. Verifica que llegue el correo a la bandeja indicada en `email` (correo real).
-3. Conecta un cliente WebSocket (STOMP/SockJS) a `/ws` y suscríbete a `/topic/reports/test-123` para ver el push en tiempo real.
-4. Repite el mismo flujo publicando en `notificaciones.alerta.compliance.queue` (exchange `osint.exchange`, routing key `alerta.compliance`) y suscribiéndote a `/topic/compliance/alerts`.
+2. Conecta un cliente WebSocket (STOMP/SockJS) a `/ws` y suscríbete a `/topic/reports/test-123` para ver el push en tiempo real (este servicio ya no envía el correo — eso lo prueba el frontend, ver punto 3).
+3. Para probar el envío real de correo, usa el flujo completo desde el Portal Ciudadano (`app2-portal/frontend`) o llama directo a la API de EmailJS con los identificadores de `app2-portal/frontend/.env`.
+4. Repite el flujo del punto 1 publicando en `notificaciones.alerta.compliance.queue` (exchange `osint.exchange`, routing key `alerta.compliance`) y suscribiéndote a `/topic/compliance/alerts`.

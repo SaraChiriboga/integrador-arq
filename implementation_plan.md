@@ -329,11 +329,11 @@ Proveer la infraestructura de red en contenedores Docker, la mensajería asíncr
         *   `alerta.queue` vinculada al binding `alerta.compliance`.
         *   `notificacion.queue` vinculada a los bindings `reporte.listo` y `alerta.compliance`.
     *   **Manejo de Errores (Dead Letter Exchange)**: Configura `osint.dlx` de tipo directo, y las colas `solicitud.dlq`, `completado.dlq` para aislar mensajes corruptos tras 3 reintentos.
-*   **Servicio de Notificaciones (Java 17 + Spring Boot 3.x + WebSockets + Spring Mail)**:
+*   **Servicio de Notificaciones (Java 17 + Spring Boot 3.x + WebSockets)**:
     *   Contenedor `app-notifications` (Spring Boot) conectado a la red de tránsito.
     *   Usa Spring AMQP (`@RabbitListener`) para consumir de la cola `notificacion.queue`.
     *   Expone endpoints WebSocket mediante `Spring WebSockets` con protocolo STOMP (o WS nativo) para notificaciones rápidas y seguras.
-    *   Al recibir `reporte.listo`: envía un correo electrónico real usando `spring-boot-starter-mail` (SMTP, por defecto Gmail vía credenciales en `.env` local) con el enlace del PDF adjunto, y difunde vía WebSocket a la suscripción del ciudadano `/topic/reports/{requestId}`.
+    *   Al recibir `reporte.listo`: difunde vía WebSocket a la suscripción del ciudadano `/topic/reports/{requestId}`. El correo electrónico real con el enlace del PDF lo dispara el frontend (App2) directamente vía EmailJS al detectar el estado `COMPLETED`, no este servicio (ver ADR-005 — evita depender de credenciales SMTP compartidas por todo el equipo).
     *   Al recibir `alerta.compliance`: envía una alerta push de alta prioridad vía WebSocket al canal de cumplimiento `/topic/compliance/alerts`.
 *   **Observabilidad centralizada (ELK Stack)**:
     *   Contenedores Docker para Elasticsearch (compartido o separado de App 3), Logstash y Kibana.
@@ -355,7 +355,8 @@ graph TD
         ELK[ELK Stack: Logs]
     end
 
-    Mail[/SMTP Externo: Gmail u otro proveedor/]
+    Mail[/EmailJS + Gmail: SaaS de envio de correo/]
+    Ciudadano((Navegador del Ciudadano))
 
     subgraph net-app1 [Red App 1: net-app1]
         App1[Worker OSINT: Python]
@@ -381,7 +382,8 @@ graph TD
     App2 <-->|AMQP Eventos| MQ
     App3 <-->|AMQP Eventos| MQ
     NS <-->|AMQP Eventos| MQ
-    NS -->|SMTP| Mail
+    NS -.->|WebSocket push| Ciudadano
+    Ciudadano -->|EmailJS API| Mail
 
     style GW fill:#f9f,stroke:#333,stroke-width:2px
     style MQ fill:#bbf,stroke:#333,stroke-width:2px

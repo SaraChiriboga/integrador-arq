@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getReportStatus } from '../services/reportService';
+import { sendReportReadyEmail } from '../services/emailService';
 import type { ReportResponse } from '../types/report';
 import { isAxiosError } from 'axios';
 
@@ -9,6 +10,7 @@ export default function StatusPage() {
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const emailSentRef = useRef(false);
 
   useEffect(() => {
     if (!requestId) {
@@ -27,9 +29,17 @@ export default function StatusPage() {
           setReport(data);
           setErrorMsg(null);
           setLoading(false);
-          
+
           if (data.status === 'COMPLETED' || data.status === 'FAILED') {
             clearInterval(intervalId);
+          }
+
+          if (data.status === 'COMPLETED' && data.pdfUrl && !emailSentRef.current) {
+            emailSentRef.current = true;
+            const toEmail = localStorage.getItem(`report-email-${requestId}`);
+            if (toEmail) {
+              sendReportReadyEmail({ toEmail, requestId, pdfUrl: data.pdfUrl });
+            }
           }
         }
       } catch (err) {

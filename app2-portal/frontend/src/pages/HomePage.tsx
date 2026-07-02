@@ -31,6 +31,9 @@ export default function HomePage() {
 
     try {
       const response = await createReport({ cedula, email });
+      // Se guarda el correo para que StatusPage pueda disparar el envío real
+      // vía EmailJS cuando el reporte quede listo (el backend ya no lo hace).
+      localStorage.setItem(`report-email-${response.requestId}`, email);
       navigate(`/status/${response.requestId}`);
     } catch (error) {
       if (isAxiosError(error) && error.response) {

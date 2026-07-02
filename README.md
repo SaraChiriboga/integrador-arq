@@ -65,7 +65,7 @@ osint-ecuador/
    - Dashboard Compliance: http://localhost:5174
    - API Gateway (TLS autofirmado): https://localhost
    - RabbitMQ Management: http://localhost:15672 (guest/guest)
-   - Envío de correos: SMTP real (Gmail por defecto) configurado vía `.env` — ver `.env.example` y `app4-platform/README.md`.
+   - Envío de correos: real, disparado por el navegador del ciudadano vía EmailJS al completarse el reporte (ver `docs/architecture-decisions/ADR-005-emailjs-frontend.md`).
 4. **Observabilidad (opcional)**: el stack ELK está apagado por defecto para no sobrecargar de RAM el equipo de desarrollo. Para activarlo:
    ```bash
    docker-compose --profile elk up -d

@@ -265,15 +265,6 @@ services:
     environment:
       RABBITMQ_HOST: app4-rabbitmq
       RABBITMQ_PORT: 5672
-      # SMTP real (por defecto Gmail) - credenciales via .env local, NUNCA comitear
-      # valores reales. Ver .env.example y app4-platform/README.md.
-      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:?Falta MAIL_USERNAME en tu .env - ver .env.example}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:?Falta MAIL_PASSWORD en tu .env - ver .env.example}
-      MAIL_FROM: ${MAIL_FROM:-${MAIL_USERNAME}}
-      MAIL_SMTP_AUTH: "true"
-      MAIL_SMTP_STARTTLS: "true"
     depends_on:
       - app4-rabbitmq
     networks:

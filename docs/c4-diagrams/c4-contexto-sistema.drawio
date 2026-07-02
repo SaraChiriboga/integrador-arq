@@ -37,7 +37,7 @@
           <mxGeometry x="820" y="340" width="240" height="100" as="geometry" />
         </mxCell>
 
-        <mxCell id="ext-mail" value="Servidor SMTP&#10;[Sistema Externo]&#10;Envío de correos con enlace al PDF&#10;(Gmail SMTP u otro proveedor real)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6b6b6b;fontColor=#ffffff;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="ext-mail" value="EmailJS + Gmail&#10;[Sistema Externo]&#10;Envío de correos con enlace al PDF&#10;(disparado desde el navegador del ciudadano)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6b6b6b;fontColor=#ffffff;fontSize=12;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="820" y="560" width="240" height="100" as="geometry" />
         </mxCell>
 
