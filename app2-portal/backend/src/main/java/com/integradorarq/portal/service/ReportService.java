@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class ReportService {
 
     private static final String LOCK_PREFIX = "lock:reporte:";
 
+    @Transactional
     public Request createReport(String cedula, String email) {
         String lockKey = LOCK_PREFIX + cedula;
         
@@ -39,41 +41,47 @@ public class ReportService {
         // 2. Crea lock en Redis con TTL de 10 minutos
         redisTemplate.opsForValue().set(lockKey, String.valueOf(System.currentTimeMillis()), Duration.ofMinutes(10));
 
-        // 3. Busca el User por cedula, o créalo si no existe
-        User user = userRepository.findByCedula(cedula).orElseGet(() -> {
-            User newUser = User.builder()
-                    .cedula(cedula)
-                    .email(email)
+        try {
+            // 3. Busca el User por cedula, o créalo si no existe
+            User user = userRepository.findByCedula(cedula).orElseGet(() -> {
+                User newUser = User.builder()
+                        .cedula(cedula)
+                        .email(email)
+                        .build();
+                return userRepository.save(newUser);
+            });
+
+            // Actualiza el email si cambió
+            if (!user.getEmail().equals(email)) {
+                user.setEmail(email);
+                user = userRepository.save(user);
+            }
+
+            // 4. Crea un nuevo Request
+            Request request = Request.builder()
+                    .user(user)
+                    .targetId(cedula)
+                    .requesterEmail(email)
                     .build();
-            return userRepository.save(newUser);
-        });
+            request = requestRepository.save(request);
 
-        // Actualiza el email si cambió
-        if (!user.getEmail().equals(email)) {
-            user.setEmail(email);
-            user = userRepository.save(user);
+            // 5. Publica el evento en RabbitMQ
+            SolicitudOsintEvent event = SolicitudOsintEvent.builder()
+                    .requestId(request.getId().toString())
+                    .targetId(cedula)
+                    .requesterEmail(email)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            rabbitTemplate.convertAndSend(RabbitMQConfig.SOLICITUD_EXCHANGE, RabbitMQConfig.SOLICITUD_ROUTING_KEY, event);
+
+            // 6. Retorna el Request creado
+            return request;
+        } catch (Exception e) {
+            // Liberar el candado si ocurre un fallo para permitir reintentos inmediatos
+            redisTemplate.delete(lockKey);
+            throw e;
         }
-
-        // 4. Crea un nuevo Request
-        Request request = Request.builder()
-                .user(user)
-                .targetId(cedula)
-                .requesterEmail(email)
-                .build();
-        request = requestRepository.save(request);
-
-        // 5. Publica el evento en RabbitMQ
-        SolicitudOsintEvent event = SolicitudOsintEvent.builder()
-                .requestId(request.getId().toString())
-                .targetId(cedula)
-                .requesterEmail(email)
-                .timestamp(System.currentTimeMillis())
-                .build();
-
-        rabbitTemplate.convertAndSend(RabbitMQConfig.SOLICITUD_EXCHANGE, RabbitMQConfig.SOLICITUD_ROUTING_KEY, event);
-
-        // 6. Retorna el Request creado
-        return request;
     }
 
     public Request findById(UUID requestId) {
