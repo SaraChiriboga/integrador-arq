@@ -1,0 +1,245 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0">
+  <diagram name="Page-1" id="v-1AjyHnvTLzUNxFzbgq">
+    <mxGraphModel dx="1858" dy="1138" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="JN0rFwLcDm56kJkivdOi-1" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Diagrama de Despliegue - Ecosistema de OSINT Ecuador&lt;/h1&gt;&lt;p&gt;Arquitectura y Diseño de Software&lt;br&gt;Elaborado por Sara Chiriboga, Martina Damián, Samuel Chalá y Anthonny Llanos&lt;/p&gt;" vertex="1">
+          <mxGeometry height="120" width="840" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dev-gateway" parent="1" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Device&amp;gt;&amp;gt;&lt;br&gt;Servidor API Gateway" vertex="1">
+          <mxGeometry height="260" width="300" x="50" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="env-gateway" parent="dev-gateway" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Execution Environment&amp;gt;&amp;gt;&lt;div&gt;NGINX 1.25 Engine&lt;/div&gt;" vertex="1">
+          <mxGeometry height="170" width="240" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp-gateway" parent="env-gateway" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app4-gateway (Proxy)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="180" x="30" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-gateway" parent="comp-gateway" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dev-transit" parent="1" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Device&amp;gt;&amp;gt;&lt;br&gt;Servidor Transit &amp; Broker" vertex="1">
+          <mxGeometry height="320" width="340" x="440" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="env-transit" parent="dev-transit" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Execution Environment&amp;gt;&amp;gt;&lt;div&gt;Docker Engine (net-transit)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="230" width="280" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp-rabbitmq" parent="env-transit" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app4-rabbitmq (Broker)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="220" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-rabbitmq" parent="comp-rabbitmq" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-notifications" parent="env-transit" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app4-notifications&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="220" x="30" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-notifications" parent="comp-notifications" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-localstack" parent="env-transit" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app4-localstack (S3)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="220" x="30" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-localstack" parent="comp-localstack" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dev-app1" parent="1" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Device&amp;gt;&amp;gt;&lt;br&gt;Servidor App 1 (OSINT Worker)" vertex="1">
+          <mxGeometry height="390" width="340" x="460" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="env-app1" parent="dev-app1" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Execution Environment&amp;gt;&amp;gt;&lt;div&gt;Docker Engine (net-app1)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="300" width="280" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp-worker" parent="env-app1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app1-worker (Python)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-worker" parent="comp-worker" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-lambda" parent="env-app1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app1-lambda-pdf (Node)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-lambda" parent="comp-lambda" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-govmock" parent="env-app1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app1-gov-mock (APIs)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-govmock" parent="comp-govmock" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-mongodb" parent="env-app1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app1-mongodb (NoSQL)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-mongodb" parent="comp-mongodb" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dev-app3" parent="1" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Device&amp;gt;&amp;gt;&lt;br&gt;Servidor App 3 (Compliance)" vertex="1">
+          <mxGeometry height="390" width="340" x="30" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="env-app3" parent="dev-app3" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Execution Environment&amp;gt;&amp;gt;&lt;div&gt;Docker Engine (net-app3)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="300" width="280" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp-frontend3" parent="env-app3" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app3-frontend (React SPA)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-frontend3" parent="comp-frontend3" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-backend3" parent="env-app3" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app3-backend (Spring Boot)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-backend3" parent="comp-backend3" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-postgres3" parent="env-app3" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app3-postgres (SQL)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-postgres3" parent="comp-postgres3" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-es3" parent="env-app3" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app3-elasticsearch (Search)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-es3" parent="comp-es3" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="comp-gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" target="comp-backend2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="245" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1-lbl" connectable="0" parent="e1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="HTTPS" vertex="1">
+          <mxGeometry relative="1" x="0.3" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="comp-gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="comp-backend3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="470" />
+              <mxPoint x="200" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2-lbl" connectable="0" parent="e2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="HTTPS" vertex="1">
+          <mxGeometry relative="1" x="0.1" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="dev-app2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="comp-worker">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="625" />
+              <mxPoint x="860" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3-lbl" connectable="0" parent="e3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="AMQP" vertex="1">
+          <mxGeometry relative="1" x="0.3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="comp-rabbitmq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="comp-backend2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="865" />
+              <mxPoint x="760" y="680" />
+              <mxPoint x="1160" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4-lbl" connectable="0" parent="e4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="AMQP" vertex="1">
+          <mxGeometry relative="1" x="0.1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="comp-rabbitmq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="comp-backend3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="860" />
+              <mxPoint x="430" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5-lbl" connectable="0" parent="e5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="AMQP" vertex="1">
+          <mxGeometry relative="1" x="0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4CvKe0a3TobXbQdXBfz5-1" edge="1" parent="1" source="comp-rabbitmq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" target="dev-app2" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="880" />
+            </Array>
+            <mxPoint x="590" y="315" as="sourcePoint" />
+            <mxPoint x="1060" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dev-app2" parent="1" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Device&amp;gt;&amp;gt;&lt;br&gt;Servidor App 2 (Portal)" vertex="1">
+          <mxGeometry height="390" width="340" x="990" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="env-app2" parent="dev-app2" style="verticalAlign=top;align=center;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" value="&amp;lt;&amp;lt;Execution Environment&amp;gt;&amp;gt;&lt;div&gt;Docker Engine (net-app2)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="300" width="280" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp-frontend2" parent="env-app2" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app2-frontend (React SPA)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-frontend2" parent="comp-frontend2" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-backend2" parent="env-app2" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app2-backend (Spring Boot)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-backend2" parent="comp-backend2" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-postgres2" parent="env-app2" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app2-postgres (SQL)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-postgres2" parent="comp-postgres2" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="comp-redis2" parent="env-app2" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Application»&lt;br&gt;&lt;b&gt;app2-redis (Cache)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="220" x="30" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="mod-redis2" parent="comp-redis2" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
