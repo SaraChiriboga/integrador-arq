@@ -10,6 +10,8 @@ Este es el repositorio unificado de la **Plataforma OSINT Ecuador**, un ecosiste
 Elaboradores: **Sara Chiriboga, Samuel Chalá, Anthonny Llanos y Martina Damián**  
 Curso: **Arquitectura y Diseño de Software — Examen Progreso 2**
 
+📌 **[Guía de Demostración Práctica de la Arquitectura (Pasos para la Defensa)](docs/guia_demostracion_arquitectura.md)**: Acceso rápido a las instrucciones de inicio de contenedores, comandos de limpieza completa de bases de datos/caché, significado de puertos y códigos de estado HTTP, y visualización de logs reales en Kibana.
+
 ---
 
 ## 📋 Matriz de Cumplimiento de Requisitos (Ruta de Archivos)
