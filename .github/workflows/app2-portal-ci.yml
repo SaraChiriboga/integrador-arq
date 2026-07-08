@@ -47,7 +47,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: app2-portal/frontend
-        run: npm ci
+        run: npm ci --omit=optional
 
       - name: Lint
         working-directory: app2-portal/frontend
