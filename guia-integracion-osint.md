@@ -36,7 +36,8 @@ sequenceDiagram
     participant DB as Postgres SQL
     participant Rabbit as RabbitMQ Broker
     participant Worker as Worker (Python)
-    participant Gob as APIs de Gobierno (Mock)
+    participant SRI as API Real SRI (Ecuador)
+    participant Mock as Mock Gobierno (Port 8083)
     participant Mongo as MongoDB Atlas (Cloud)
     participant Lambda as Lambda PDF (Node/Puppeteer)
     participant S3 as LocalStack (S3 Storage)
@@ -52,24 +53,28 @@ sequenceDiagram
     
     Rabbit->>Worker: 6. Consume mensaje
     activate Worker
-    Worker->>Gob: 7. Consultas concurrentes (Registro Civil, ANT, SRI, IESS, SENESCYT)
-    Gob-->>Worker: Retorna JSONs individuales (Latencia ~3s)
-    Worker->>Mongo: 8. Persiste JSON crudo consolidado (osint_db)
-    Worker->>Lambda: 9. POST http://localhost:3000 (Datos limpios)
+    Worker->>SRI: 7. Consultar RUC/Contribuyente (Real)
+    SRI-->>Worker: Retorna Razón Social y Estado RUC
+    Worker->>Mock: 8. Consultar Registro Civil / ANT / SENESCYT (Simulado)
+    Mock-->>Worker: Retorna Fecha Nacimiento, Licencia, Títulos
+    Worker->>SRI: 9. Consultar Placa Vehículo (Real)
+    SRI-->>Worker: Retorna Marca, Modelo, Año, Color, Cilindraje
+    Worker->>Mongo: 10. Persiste JSON crudo consolidado (osint_db)
+    Worker->>Lambda: 11. POST http://localhost:3000 (Datos limpios)
     activate Lambda
     Note over Lambda: Abre Chromium Headless con Puppeteer,<br/>inyecta HTML/CSS y genera el Buffer PDF.
-    Lambda->>S3: 10. Carga reporte.pdf en bucket 'osint-bucket'
+    Lambda->>S3: 12. Carga reporte.pdf en bucket 'osint-bucket'
     S3-->>Lambda: Retorna URL de descarga
     Lambda-->>Worker: Retorna URL del PDF
     deactivate Lambda
-    Worker->>Rabbit: 11. Publica evento 'osint.completado' (osint.exchange - SUCCESS)
+    Worker->>Rabbit: 13. Publica evento 'osint.completado' (osint.exchange - SUCCESS)
     deactivate Worker
     
-    Rabbit->>API: 12. Consume evento de completación
-    API->>DB: 13. Actualiza solicitud a COMPLETED (Guarda pdf_url)
+    Rabbit->>API: 14. Consume evento de completación
+    API->>DB: 15. Actualiza solicitud a COMPLETED (Guarda pdf_url)
     
     loop Polling cada 3 segundos
-        Ciudadano->>API: 14. GET /api/v1/reports/{requestId}
+        Ciudadano->>API: 16. GET /api/v1/reports/{requestId}
         API->>DB: Leer Estado
         DB-->>API: Retorna COMPLETED + pdf_url
         API-->>Ciudadano: Retorna estado de reporte

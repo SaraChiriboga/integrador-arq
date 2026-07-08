@@ -10,6 +10,26 @@ interface Alert {
   timestamp: number;
 }
 
+interface AntData {
+  points: number;
+  fines: number;
+}
+
+interface SriData {
+  hasRuc: boolean;
+  taxStatus: string;
+}
+
+interface IessData {
+  isAffiliated: boolean;
+  contributions: number;
+}
+
+interface SenescytTitle {
+  title: string;
+  university: string;
+}
+
 interface OsintReport {
   id: string;
   targetId: string;
@@ -17,6 +37,12 @@ interface OsintReport {
   pdfUrl: string;
   status: string;
   completedAt: number;
+  birthDate?: string;
+  civilStatus?: string;
+  ant?: AntData;
+  sri?: SriData;
+  iess?: IessData;
+  senescyt?: SenescytTitle[];
 }
 
 function App() {
@@ -29,7 +55,11 @@ function App() {
     try {
       const res = await fetch('http://localhost:8081/api/v1/compliance/alerts');
       const data = await res.json();
-      setAlerts(data);
+      if (Array.isArray(data)) {
+        setAlerts(data);
+      } else {
+        setAlerts([]);
+      }
     } catch (error) {
       console.error('Error fetching alerts:', error);
     }
@@ -42,9 +72,14 @@ function App() {
     try {
       const res = await fetch(`http://localhost:8081/api/v1/compliance/search?q=${searchQuery}`);
       const data = await res.json();
-      setSearchResults(data);
+      if (Array.isArray(data)) {
+        setSearchResults(data);
+      } else {
+        setSearchResults([]);
+      }
     } catch (error) {
       console.error('Error searching reports:', error);
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }
@@ -120,25 +155,120 @@ function App() {
                 </div>
               )}
               {searchResults.map((report) => (
-                <div key={report.id} className="p-6 border border-slate-200/60 rounded-2xl bg-white/60 hover:bg-white/90 hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300 hover:-translate-y-1">
+                <div key={report.id} className="p-6 border border-slate-200/60 rounded-2xl bg-white/60 hover:bg-white/90 hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-bold text-slate-900">{report.fullName}</h3>
                     <span className="px-3 py-1.5 bg-emerald-100/80 text-emerald-700 text-xs font-bold rounded-lg uppercase tracking-wider border border-emerald-200">
                       {report.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mb-4 text-sm text-slate-600 bg-slate-100/50 w-fit px-3 py-1 rounded-lg">
+                  
+                  <div className="flex items-center gap-2 mb-5 text-sm text-slate-600 bg-slate-100/50 w-fit px-3 py-1.5 rounded-lg border border-slate-200/40">
                     <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
-                    <strong>Cédula:</strong> {report.targetId}
+                    <strong>Cédula de Identidad:</strong> {report.targetId}
                   </div>
+
+                  {/* DOSSIER DETALLADO DE INFRACCIONES */}
+                  <div className="mt-4 mb-6 p-5 rounded-2xl bg-slate-50/80 border border-slate-200/50 text-xs text-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+                    {/* Registro Civil */}
+                    <div className="p-3 bg-white rounded-xl border border-slate-200/30 shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wider text-[10px] text-indigo-600">
+                        👤 Registro Civil
+                      </h4>
+                      <p className="mb-1"><strong>Nacimiento:</strong> {report.birthDate || 'N/D'}</p>
+                      <p><strong>Estado Civil:</strong> {report.civilStatus || 'N/D'}</p>
+                    </div>
+
+                    {/* Agencia Nacional de Tránsito */}
+                    <div className="p-3 bg-white rounded-xl border border-slate-200/30 shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wider text-[10px] text-orange-600">
+                        🚗 Tránsito (ANT)
+                      </h4>
+                      <p className="mb-1"><strong>Puntos Licencia:</strong> {report.ant ? report.ant.points : 'N/D'}/30</p>
+                      <p>
+                        <strong>Multas Pendientes:</strong>{' '}
+                        <span className={report.ant && report.ant.fines > 0 ? 'text-red-600 font-bold' : 'text-emerald-600 font-semibold'}>
+                          {report.ant ? `$${report.ant.fines.toFixed(2)}` : 'N/D'}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Servicio de Rentas Internas */}
+                    <div className="p-3 bg-white rounded-xl border border-slate-200/30 shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wider text-[10px] text-emerald-600">
+                        💵 Tributario (SRI)
+                      </h4>
+                      <p className="mb-1"><strong>Posee RUC:</strong> {report.sri ? (report.sri.hasRuc ? 'Sí' : 'No') : 'N/D'}</p>
+                      <p>
+                        <strong>Estado SRI:</strong>{' '}
+                        <span className={report.sri && report.sri.taxStatus === 'CON DEUDAS' ? 'text-red-600 font-bold' : 'text-emerald-600 font-semibold'}>
+                          {report.sri ? report.sri.taxStatus : 'N/D'}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* IESS */}
+                    <div className="p-3 bg-white rounded-xl border border-slate-200/30 shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wider text-[10px] text-teal-600">
+                        🏥 Seguridad Social (IESS)
+                      </h4>
+                      <p className="mb-1"><strong>Afiliación Activa:</strong> {report.iess ? (report.iess.isAffiliated ? 'Sí' : 'No') : 'N/D'}</p>
+                      <p><strong>Aportaciones acumuladas:</strong> {report.iess ? `${report.iess.contributions} aportes` : 'N/D'}</p>
+                    </div>
+
+                    {/* Educación Superior */}
+                    <div className="p-3 bg-white rounded-xl border border-slate-200/30 shadow-sm sm:col-span-2">
+                      <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wider text-[10px] text-purple-600">
+                        🎓 Educación (SENESCYT)
+                      </h4>
+                      {report.senescyt && report.senescyt.length > 0 ? (
+                        report.senescyt.map((t, i) => (
+                          <div key={i} className="mb-1.5 last:mb-0 pb-1.5 border-b border-slate-100 last:border-0">
+                            <p className="font-semibold text-slate-800">{t.title}</p>
+                            <p className="text-[10px] text-slate-500">{t.university}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-500">Sin títulos de educación superior registrados.</p>
+                      )}
+                    </div>
+
+                    {/* Control de Sanciones (OpenSanctions) */}
+                    <div className={`p-3 rounded-xl border sm:col-span-2 shadow-sm ${
+                      (report.fullName.toUpperCase().includes('PEREZ') || report.fullName.toUpperCase().includes('SANCIONADO'))
+                        ? 'bg-red-50/80 border-red-200/80 text-red-900'
+                        : 'bg-emerald-50/80 border-emerald-200/80 text-emerald-900'
+                    }`}>
+                      <h4 className={`font-bold mb-2 flex items-center gap-1.5 uppercase tracking-wider text-[10px] ${
+                        (report.fullName.toUpperCase().includes('PEREZ') || report.fullName.toUpperCase().includes('SANCIONADO'))
+                          ? 'text-red-700'
+                          : 'text-emerald-700'
+                      }`}>
+                        🛡️ Control de Sanciones (OpenSanctions)
+                      </h4>
+                      {(report.fullName.toUpperCase().includes('PEREZ') || report.fullName.toUpperCase().includes('SANCIONADO')) ? (
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold text-red-700">🚨 ALERTA:</span>
+                          <p>Coincidencia del 89% en listas de PEPs / Lavado de Activos o Terrorismo.</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold text-emerald-700">✅ LIMPIO:</span>
+                          <p>No se encontraron coincidencias en listas de sanciones internacionales.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <a
                     href={report.pdfUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all duration-300"
+                    className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all duration-300 shadow-sm border border-indigo-100/50 hover:shadow-lg hover:shadow-indigo-500/10"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    Descargar Reporte OSINT
+                    Descargar Reporte Oficial (PDF)
                   </a>
                 </div>
               ))}

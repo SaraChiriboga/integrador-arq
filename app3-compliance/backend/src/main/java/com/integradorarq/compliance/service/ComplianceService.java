@@ -23,16 +23,16 @@ public class ComplianceService {
 
     private final OsintReportRepository osintReportRepository;
     private final AlertRepository alertRepository;
-    private final OpenSanctionsMockService openSanctionsMockService;
+    private final OpenSanctionsService openSanctionsService;
     private final RabbitTemplate rabbitTemplate;
 
     public ComplianceService(OsintReportRepository osintReportRepository,
                              AlertRepository alertRepository,
-                             OpenSanctionsMockService openSanctionsMockService,
+                             OpenSanctionsService openSanctionsService,
                              RabbitTemplate rabbitTemplate) {
         this.osintReportRepository = osintReportRepository;
         this.alertRepository = alertRepository;
-        this.openSanctionsMockService = openSanctionsMockService;
+        this.openSanctionsService = openSanctionsService;
         this.rabbitTemplate = rabbitTemplate;
     }
 
@@ -64,7 +64,7 @@ public class ComplianceService {
         log.info("Indexed OsintReport in Elasticsearch for requestId: {}", report.getId());
 
         // 2. Call OpenSanctions
-        Map<String, Object> matchResult = openSanctionsMockService.checkName(report.getFullName());
+        Map<String, Object> matchResult = openSanctionsService.checkName(report.getFullName());
         double score = (double) matchResult.getOrDefault("score", 0.0);
 
         // 3. Generate Alert if score > 0.8

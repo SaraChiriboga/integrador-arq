@@ -37,4 +37,5 @@ spring:
 
 compliance:
   opensanctions:
-    api-url: ${OPENSANCTIONS_API_URL:http://localhost:8080/mock/match}
+    api-url: ${OPENSANCTIONS_API_URL:https://api.opensanctions.org/match/default}
+    api-key: ${OPENSANCTIONS_API_KEY:01ceb5e1374691b5da230c0eeb679345}

@@ -22,9 +22,12 @@ sequenceDiagram
     participant Redis as Redis Cache
     participant MQ as RabbitMQ (Bus de Eventos)
     participant App1 as App 1: Motor Worker OSINT (Python)
+    participant SRI as API Real SRI (Ecuador)
+    participant Mock as Mock Gobierno (Port 8083)
     participant Mongo as MongoDB
     participant Lambda as Lambda PDF (NodeJS/Puppeteer)
     participant App3 as App 3: Compliance Engine (Java/Spring Boot)
+    participant OS as API Real OpenSanctions
     participant ES as Elasticsearch
     participant Notif as Servicio Notificaciones (Java/Spring Boot)
 
@@ -38,7 +41,12 @@ sequenceDiagram
 
     MQ-->>App1: Consume "solicitud.osint"
     activate App1
-    App1->>App1: Consultar APIs Gobierno (Registro Civil, ANT, SENESCYT, SRI, IESS)
+    App1->>SRI: Consultar RUC/Contribuyente (Real)
+    SRI-->>App1: Retorna Razón Social y Estado RUC
+    App1->>Mock: Consultar Registro Civil / ANT / SENESCYT (Simulado)
+    Mock-->>App1: Retorna Fecha Nacimiento, Licencia, Títulos
+    App1->>SRI: Consultar Placa Vehículo (Real)
+    SRI-->>App1: Retorna Marca, Modelo, Año, Color, Cilindraje
     App1->>Mongo: Guardar datos crudos extraídos (osint_raw_data)
     App1->>Lambda: Invocar Generación PDF (HTML template + data)
     activate Lambda
@@ -50,7 +58,8 @@ sequenceDiagram
 
     MQ-->>App3: Consume "osint.completado" (Compliance Check & Search Index)
     activate App3
-    App3->>App3: Cruce OpenSanctions API (PEPs / Sanciones)
+    App3->>OS: POST /match/default (Cruce PEPs/Sanciones Real)
+    OS-->>App3: Retorna Coincidencias & Puntuación
     App3->>ES: Indexar Reporte para búsquedas analíticas
     opt Si es PEP o tiene Coincidencias de Sanciones (Score > 0.8)
         App3->>App3: Guardar Alerta en PostgreSQL App 3
@@ -376,6 +385,12 @@ graph TD
         ES[(Elasticsearch)]
     end
 
+    subgraph ExtAPIs [APIs Externas e Internet]
+        SRI[API Real SRI: srienlinea.sri.gob.ec]
+        OS[API Real OpenSanctions: api.opensanctions.org]
+        GovMock[Mock Gobierno local: Puerto 8083]
+    end
+
     GW -->|REST Enrutamiento| App2
     GW -->|REST Enrutamiento| App3
     App1 <-->|AMQP Eventos| MQ
@@ -385,9 +400,17 @@ graph TD
     NS -.->|WebSocket push| Ciudadano
     Ciudadano -->|EmailJS API| Mail
 
+    %% Conexiones con APIs externas (Reales y Simuladas)
+    App1 -->|HTTP GET/POST: Real| SRI
+    App1 -->|HTTP GET: Simulado| GovMock
+    App3 -->|HTTP POST: Real Match| OS
+
     style GW fill:#f9f,stroke:#333,stroke-width:2px
     style MQ fill:#bbf,stroke:#333,stroke-width:2px
     style NS fill:#d5e8d4,stroke:#333,stroke-width:2px
+    style SRI fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
+    style OS fill:#e1d5e7,stroke:#9673a6,stroke-width:2px
+    style GovMock fill:#f5f5f5,stroke:#666,stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 #### 3. Contratos de Interfaz / Puntos de Integración

@@ -227,8 +227,8 @@ services:
       RABBITMQ_PORT: 5672
       ELASTICSEARCH_HOST: app3-elasticsearch
       ELASTICSEARCH_PORT: 9200
-      # Mock in-process (ver docs/architecture-decisions); se apunta a si mismo por consistencia.
-      OPENSANCTIONS_API_URL: http://localhost:8081/mock/match
+      OPENSANCTIONS_API_URL: https://api.opensanctions.org/match/default
+      OPENSANCTIONS_API_KEY: 01ceb5e1374691b5da230c0eeb679345
     depends_on:
       - app3-postgres
       - app3-elasticsearch

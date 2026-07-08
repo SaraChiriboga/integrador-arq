@@ -138,8 +138,68 @@ exports.handler = async (event) => {
                     </div>
                     <div class="data-row">
                         <span class="label">Número de Aportaciones:</span>
-                        <span class="value">${data.iess.contributions} aportes</span>
+                        <span class="value">${data.iess.contributions} de aportes</span>
                     </div>
+                </div>
+
+                <div class="section">
+                    <h3>5. Registro de Títulos Profesionales (SENESCYT)</h3>
+                    ${data.senescyt && data.senescyt.length > 0 ? data.senescyt.map(t => `
+                        <div class="data-row">
+                            <span class="label">Título Universitario:</span>
+                            <span class="value">${t.title}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Institución de Educación Superior:</span>
+                            <span class="value">${t.university}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Fecha de Registro:</span>
+                            <span class="value">${t.registrationDate}</span>
+                        </div>
+                    `).join('') : `
+                        <div class="data-row">
+                            <span class="value">No se registran títulos profesionales para el ciudadano.</span>
+                        </div>
+                    `}
+                </div>
+
+                <div class="section">
+                    <h3>6. Información de Vehículo Registrado (SRI / ANT)</h3>
+                    ${data.vehiculo && data.vehiculo.placa && data.vehiculo.placa !== "N/A" ? `
+                        <div class="data-row">
+                            <span class="label">Placa:</span>
+                            <span class="value">${data.vehiculo.placa}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Marca / Modelo:</span>
+                            <span class="value">${data.vehiculo.marca} ${data.vehiculo.modelo}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Año de Fabricación:</span>
+                            <span class="value">${data.vehiculo.anio}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Color:</span>
+                            <span class="value">${data.vehiculo.color}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Cilindraje:</span>
+                            <span class="value">${data.vehiculo.cilindraje} cc</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Cantón de Matriculación:</span>
+                            <span class="value">${data.vehiculo.canton}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Fecha de Última Matrícula:</span>
+                            <span class="value">${data.vehiculo.fechaMatricula}</span>
+                        </div>
+                    ` : `
+                        <div class="data-row">
+                            <span class="value">No se encontraron vehículos registrados asociados a las placas del ciudadano.</span>
+                        </div>
+                    `}
                 </div>
             </body>
             </html>
