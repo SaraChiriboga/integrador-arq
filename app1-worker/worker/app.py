@@ -167,99 +167,110 @@ async def call_pdf_lambda(request_id: str, data: dict):
 
 async def process_message(message: aio_pika.IncomingMessage, channel: aio_pika.Channel):
     """Procesamiento principal asíncrono de solicitudes OSINT."""
-    async with message.process():
+    try:
+        payload = json.loads(message.body.decode())
+        request_id = payload.get("requestId")
+        target_id = payload.get("targetId")
+        
+        if not request_id or not target_id:
+            logger.error("Mensaje inválido. Faltan requestId o targetId.")
+            await message.reject(requeue=False)
+            return
+
+        logger.info(f"--- NUEVA SOLICITUD RECIBIDA: {request_id} (Cédula: {target_id}) ---")
+
+        # 1. Consultar de forma paralela/secuencial las APIs reales y de scraping
+        sri_data = await get_real_sri_data(target_id)
+        ant_data = await get_ant_data(target_id)
+        
+        # Obtener datos de vehiculos si se extrajo placa en el paso de la ANT
+        vehiculo_data = {}
+        if ant_data.get("plate"):
+            vehiculo_data = await get_real_sri_vehiculo(ant_data["plate"])
+
+        rc_data = await get_registro_civil_data(target_id, sri_data)
+        senescyt_data = await get_senescyt_data(target_id)
+
+        extracted_data = {
+            "rc": rc_data,
+            "ant": ant_data,
+            "senescyt": senescyt_data,
+            "sri": sri_data,
+            "vehiculo": vehiculo_data,
+            "iess": {"isAffiliated": False, "contributions": 0}  # IESS Excluido
+        }
+
+        # Verificar si logramos obtener al menos la identidad
+        if not extracted_data.get("rc") or not extracted_data["rc"].get("fullName"):
+            logger.error(f"No se pudo extraer la información básica de identidad para {target_id}. Abortando.")
+            # Publicar evento fallido
+            await publish_completion_event(channel, request_id, target_id, "", "FAILED", {})
+            await message.ack()
+            return
+
+        # Formatear la data consolidada para guardar y enviar a la Lambda PDF
+        consolidated = {
+            "fullName": rc_data.get("fullName"),
+            "birthDate": rc_data.get("birthDate"),
+            "civilStatus": rc_data.get("civilStatus"),
+            "ant": {
+                "points": ant_data.get("points", 30),
+                "fines": ant_data.get("fines", 0.0)
+            },
+            "senescyt": senescyt_data,
+            "sri": {
+                "hasRuc": sri_data.get("hasRuc", False),
+                "taxStatus": sri_data.get("taxStatus", "AL DIA")
+            },
+            "iess": {
+                "isAffiliated": False,
+                "contributions": 0
+            },
+            "vehiculo": {
+                "placa": vehiculo_data.get("numeroPlaca") or "N/A",
+                "marca": vehiculo_data.get("descripcionMarca") or "CHEVROLET",
+                "modelo": vehiculo_data.get("descripcionModelo") or "GRAND VITARA",
+                "anio": vehiculo_data.get("anioAuto") or 2008,
+                "color": vehiculo_data.get("colorVehiculo1") or "GRIS",
+                "cilindraje": vehiculo_data.get("cilindraje") or "1600",
+                "fechaMatricula": vehiculo_data.get("fechaUltimaMatricula") or "2024-11-12",
+                "canton": vehiculo_data.get("descripcionCanton") or "QUITO"
+            }
+        }
+
+        # 2. Guardar datos crudos en MongoDB (Persistencia aislada App 1)
+        document = {
+            "requestId": request_id,
+            "targetId": target_id,
+            "extractedData": extracted_data,
+            "timestamp": asyncio.get_event_loop().time()
+        }
+        await raw_collection.insert_one(document)
+        logger.info("Datos agregados guardados en MongoDB.")
+
+        # 3. Invocar Lambda PDF
+        pdf_url = await call_pdf_lambda(request_id, consolidated)
+        
+        if pdf_url:
+            logger.info(f"PDF generado y subido con éxito: {pdf_url}")
+            # 4. Publicar evento de finalización exitosa
+            await publish_completion_event(channel, request_id, target_id, pdf_url, "SUCCESS", consolidated)
+        else:
+            logger.error("No se pudo obtener la URL del PDF.")
+            await publish_completion_event(channel, request_id, target_id, "", "FAILED", {})
+
+        # Confirmar procesamiento exitoso
+        await message.ack()
+
+    except Exception as e:
+        logger.error(f"Error crítico procesando mensaje: {e}")
+        # Rechazar mensaje sin reenviar (requeue=False), enviándolo a la DLQ
         try:
-            payload = json.loads(message.body.decode())
-            request_id = payload.get("requestId")
-            target_id = payload.get("targetId")
-            
-            if not request_id or not target_id:
-                logger.error("Mensaje inválido. Faltan requestId o targetId.")
-                return
-
-            logger.info(f"--- NUEVA SOLICITUD RECIBIDA: {request_id} (Cédula: {target_id}) ---")
-
-            # 1. Consultar de forma paralela/secuencial las APIs reales y de scraping
-            sri_data = await get_real_sri_data(target_id)
-            ant_data = await get_ant_data(target_id)
-            
-            # Obtener datos de vehiculos si se extrajo placa en el paso de la ANT
-            vehiculo_data = {}
-            if ant_data.get("plate"):
-                vehiculo_data = await get_real_sri_vehiculo(ant_data["plate"])
-
-            rc_data = await get_registro_civil_data(target_id, sri_data)
-            senescyt_data = await get_senescyt_data(target_id)
-
-            extracted_data = {
-                "rc": rc_data,
-                "ant": ant_data,
-                "senescyt": senescyt_data,
-                "sri": sri_data,
-                "vehiculo": vehiculo_data,
-                "iess": {"isAffiliated": False, "contributions": 0}  # IESS Excluido
-            }
-
-            # Verificar si logramos obtener al menos la identidad
-            if not extracted_data.get("rc") or not extracted_data["rc"].get("fullName"):
-                logger.error(f"No se pudo extraer la información básica de identidad para {target_id}. Abortando.")
-                # Publicar evento fallido
-                await publish_completion_event(channel, request_id, target_id, "", "FAILED", {})
-                return
-
-            # Formatear la data consolidada para guardar y enviar a la Lambda PDF
-            consolidated = {
-                "fullName": rc_data.get("fullName"),
-                "birthDate": rc_data.get("birthDate"),
-                "civilStatus": rc_data.get("civilStatus"),
-                "ant": {
-                    "points": ant_data.get("points", 30),
-                    "fines": ant_data.get("fines", 0.0)
-                },
-                "senescyt": senescyt_data,
-                "sri": {
-                    "hasRuc": sri_data.get("hasRuc", False),
-                    "taxStatus": sri_data.get("taxStatus", "AL DIA")
-                },
-                "iess": {
-                    "isAffiliated": False,
-                    "contributions": 0
-                },
-                "vehiculo": {
-                    "placa": vehiculo_data.get("numeroPlaca") or "N/A",
-                    "marca": vehiculo_data.get("descripcionMarca") or "CHEVROLET",
-                    "modelo": vehiculo_data.get("descripcionModelo") or "GRAND VITARA",
-                    "anio": vehiculo_data.get("anioAuto") or 2008,
-                    "color": vehiculo_data.get("colorVehiculo1") or "GRIS",
-                    "cilindraje": vehiculo_data.get("cilindraje") or "1600",
-                    "fechaMatricula": vehiculo_data.get("fechaUltimaMatricula") or "2024-11-12",
-                    "canton": vehiculo_data.get("descripcionCanton") or "QUITO"
-                }
-            }
-
-            # 2. Guardar datos crudos en MongoDB (Persistencia aislada App 1)
-            document = {
-                "requestId": request_id,
-                "targetId": target_id,
-                "extractedData": extracted_data,
-                "timestamp": asyncio.get_event_loop().time()
-            }
-            await raw_collection.insert_one(document)
-            logger.info("Datos agregados guardados en MongoDB.")
-
-            # 3. Invocar Lambda PDF
-            pdf_url = await call_pdf_lambda(request_id, consolidated)
-            
-            if pdf_url:
-                logger.info(f"PDF generado y subido con éxito: {pdf_url}")
-                # 4. Publicar evento de finalización exitosa
-                await publish_completion_event(channel, request_id, target_id, pdf_url, "SUCCESS", consolidated)
-            else:
-                logger.error("No se pudo obtener la URL del PDF.")
-                await publish_completion_event(channel, request_id, target_id, "", "FAILED", {})
-
-        except Exception as e:
-            logger.error(f"Error crítico procesando mensaje: {e}")
+            logger.info("Intentando rechazar el mensaje con requeue=False...")
+            await message.reject(requeue=False)
+            logger.info("Mensaje rechazado con éxito.")
+        except Exception as reject_err:
+            logger.error(f"Error al rechazar mensaje: {reject_err}")
 
 async def publish_completion_event(channel: aio_pika.Channel, request_id: str, target_id: str, pdf_url: str, status: str, data: dict):
     """Publica el evento osint.completado al exchange de RabbitMQ."""
@@ -298,7 +309,10 @@ async def main():
     await queue.bind(exchange, routing_key="solicitud.osint")
 
     logger.info(f"Worker listo y escuchando la cola {QUEUE_NAME}...")
-    await queue.consume(lambda msg: process_message(msg, channel))
+    async def on_message(message: aio_pika.IncomingMessage):
+        await process_message(message, channel)
+
+    await queue.consume(on_message)
 
     try:
         await asyncio.Future()  # Bloquear hilo para mantener el worker activo
