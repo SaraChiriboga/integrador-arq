@@ -1,0 +1,152 @@
+openapi: 3.0.3
+info:
+  title: API Portal Ciudadano - OSINT Ecuador
+  description: |
+    API para la creación de solicitudes de antecedentes gubernamentales y la consulta de su estado de procesamiento. 
+    Expuesta públicamente a través del API Gateway (NGINX) con seguridad TLS, control de tasa (Rate Limiting) e Idempotencia controlada por Redis.
+  version: 1.0.0
+servers:
+  - url: https://localhost/api/v1
+    description: API Gateway Local (Entrada Única)
+paths:
+  /reports:
+    post:
+      summary: Crear una nueva solicitud de antecedentes (Reporte OSINT)
+      description: |
+        Registra una solicitud en PostgreSQL, valida la cédula, verifica duplicados en caché Redis (lock de 10 minutos)
+        y publica un evento 'solicitud.osint' asíncronamente en RabbitMQ.
+      operationId: createReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '202':
+          description: Solicitud Aceptada para Procesamiento Asíncrono.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportStatusResponse'
+        '400':
+          description: Cédula o correo inválido (Error en el algoritmo módulo 10).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflicto. Ya existe una consulta activa en proceso para esa cédula (Idempotencia en Redis).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Servicio temporalmente no disponible (Rate Limit excedido).
+
+  /reports/{requestId}:
+    get:
+      summary: Consultar el estado de un reporte solicitado
+      description: Consulta el estado de procesamiento del reporte en PostgreSQL.
+      operationId: getReportStatus
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: Identificador único UUID de la solicitud
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalle del estado del reporte.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportDetailsResponse'
+        '404':
+          description: Solicitud no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ReportRequest:
+      type: object
+      required:
+        - cedula
+        - email
+      properties:
+        cedula:
+          type: string
+          pattern: '^[0-9]{10}$'
+          example: '1710034065'
+          description: Cédula ecuatoriana de 10 dígitos (validada por módulo 10).
+        email:
+          type: string
+          format: email
+          example: 'ciudadano@correo.com'
+          description: Correo de destino para notificaciones.
+          
+    ReportStatusResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          example: '5ff1df21-7e8c-4a30-8919-42b7a0f7c222'
+        status:
+          type: string
+          enum: [PROCESSING, COMPLETED, FAILED]
+          example: 'PROCESSING'
+        createdAt:
+          type: integer
+          format: int64
+          example: 1782813385000
+          description: Marca de tiempo Epoch (milisegundos) de creación.
+
+    ReportDetailsResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          example: '5ff1df21-7e8c-4a30-8919-42b7a0f7c222'
+        cedula:
+          type: string
+          example: '1710034065'
+        status:
+          type: string
+          enum: [PROCESSING, COMPLETED, FAILED]
+          example: 'COMPLETED'
+        pdfUrl:
+          type: string
+          format: uri
+          example: 'https://localhost/api/v1/s3-bucket/reports/1710034065-5ff1df21.pdf'
+          description: URL de descarga segura del reporte PDF en LocalStack S3.
+        completedAt:
+          type: integer
+          format: int64
+          example: 1782813405000
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-07-08T12:00:00Z'
+        status:
+          type: integer
+          example: 409
+        error:
+          type: string
+          example: 'Conflict'
+        message:
+          type: string
+          example: 'Ya existe una solicitud en proceso para esta cédula.'
+        path:
+          type: string
+          example: '/api/v1/reports'

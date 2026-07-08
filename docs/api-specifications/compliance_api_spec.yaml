@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: API de Compliance y Búsquedas - OSINT Ecuador
+  description: |
+    API para la auditoría de alertas de cumplimiento y búsquedas avanzadas sobre reportes indexados en Elasticsearch.
+    Expuesta para consumo del Dashboard de Monitoreo mediante el API Gateway.
+  version: 1.0.0
+servers:
+  - url: https://localhost/api/v1/compliance
+    description: API Gateway Local (Ruta /compliance)
+security:
+  - BearerAuth: []
+paths:
+  /alerts:
+    get:
+      summary: Listar alertas de alto riesgo de compliance (PEPs / Sancionados)
+      description: |
+        Retorna las alertas históricas registradas en PostgreSQL de App 3 generadas cuando el cruce
+        con OpenSanctions arrojó una coincidencia (score) superior al 80%.
+      operationId: getAlerts
+      responses:
+        '200':
+          description: Lista de alertas de compliance.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComplianceAlert'
+        '401':
+          description: No autorizado (Token JWT inválido o ausente).
+        '500':
+          description: Error interno de base de datos.
+
+  /search:
+    get:
+      summary: Realizar búsquedas de texto completo y difusas (Fuzzy Search)
+      description: |
+        Realiza una consulta a Elasticsearch para buscar reportes OSINT indexados por coincidencia
+        de palabras clave en campos como nombres, cédula, universidad, empleador, etc.
+      operationId: searchReports
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Palabra clave, nombre o documento a buscar en Elasticsearch
+          schema:
+            type: string
+            example: 'Perez'
+      responses:
+        '200':
+          description: Resultados de la consulta a Elasticsearch.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchReportResult'
+        '400':
+          description: Falta el parámetro de consulta.
+        '401':
+          description: No autorizado.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Ingrese el token JWT de acceso obtenido en el inicio de sesión para analistas de Compliance.
+  schemas:
+    ComplianceAlert:
+      type: object
+      properties:
+        alertId:
+          type: string
+          format: uuid
+          example: 'bc11df21-7e8c-4a30-8919-42b7a0f7c999'
+        requestId:
+          type: string
+          format: uuid
+          example: '5ff1df21-7e8c-4a30-8919-42b7a0f7c222'
+        targetId:
+          type: string
+          example: '1712345678'
+        fullName:
+          type: string
+          example: 'JUAN PEREZ ALBUJA'
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+          example: 'HIGH'
+        matchReason:
+          type: string
+          example: 'Coincidencia 89% con lista de PEPs/Sanciones en OpenSanctions (Q283719)'
+        timestamp:
+          type: integer
+          format: int64
+          example: 1782813410000
+
+    SearchReportResult:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          example: '5ff1df21-7e8c-4a30-8919-42b7a0f7c222'
+        targetId:
+          type: string
+          example: '1712345678'
+        fullName:
+          type: string
+          example: 'JUAN PEREZ ALBUJA'
+        civilStatus:
+          type: string
+          example: 'SOLTERO'
+        ant:
+          type: object
+          properties:
+            points:
+              type: integer
+              example: 28
+            fines:
+              type: number
+              example: 0.0
+        senescyt:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                example: 'INGENIERO EN SISTEMAS'
+              university:
+                type: string
+                example: 'EPN'
+        sri:
+          type: object
+          properties:
+            hasRuc:
+              type: boolean
+              example: true
+            taxStatus:
+              type: string
+              example: 'AL DIA'
+        iess:
+          type: object
+          properties:
+            isAffiliated:
+              type: boolean
+              example: true
+            contributions:
+              type: integer
+              example: 120
+        pdfUrl:
+          type: string
+          format: uri
+          example: 'https://localhost/api/v1/s3-bucket/reports/1712345678-5ff1df21.pdf'
+        score:
+          type: number
+          example: 1.0
+          description: Relevancia del resultado calculada por Elasticsearch.
